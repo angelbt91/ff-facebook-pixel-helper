@@ -1,0 +1,21 @@
+{
+
+  "manifest_version": 2,
+  "name": "ff-pixel-helper",
+  "version": "1.0",
+
+  "description": "View all Facebook events fired on the current page.",
+
+  "icons": {
+    "48": "icons/icon-48x48.ico",
+    "96": "icons/icon-96x96.ico"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["main.js"]
+    }
+  ]
+
+}
