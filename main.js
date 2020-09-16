@@ -19,7 +19,11 @@ window.onload = function () {
         window,
         {cloneFunctions: true});
 
+    // TODO catch events fired before plugin load
+
     let eventCatcher = function (value) {
-        console.log("Llamada capturada:", value);
+        // TODO send to popup
+        console.log("Call to fbq captured:", value);
     };
 }
+
