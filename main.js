@@ -1,6 +1,4 @@
 window.onload = function () {
-    document.body.style.border = "5px solid red"; // helper to debug if ext is running
-
     let originalFbq = window.wrappedJSObject.fbq;
 
     let newFbq = (...params) => {
@@ -8,27 +6,40 @@ window.onload = function () {
         originalFbq(...params)
     }
 
-    // replace former fbq object in the page by our newFbq
-    window.wrappedJSObject.fbq = cloneInto(
-        newFbq,
-        window,
-        {cloneFunctions: true});
-
-    XPCNativeWrapper(window.wrappedJSObject.fbq); // we wrap the original object again
+    // replace former fbq by our newFbq
+    window.wrappedJSObject.fbq = cloneInto(newFbq, window, {cloneFunctions: true});
+    // wrap the original object again
+    XPCNativeWrapper(window.wrappedJSObject.fbq);
 
     // TODO catch events fired before plugin load
 }
 
+let events = [];
+
+browser.runtime.onMessage.addListener(
+    function (message, sender, sendResponse) {
+        switch (message.type) {
+            case "getEvents":
+                sendResponse(events);
+                break;
+            default:
+                console.error("Unrecognised message: ", message);
+        }
+    }
+);
+
 let eventCatcher = function (...params) {
     argumentsLogger(arguments);
 
-    // TODO send to popup
+    let eventToStore = {};
+    params.forEach((param, index) => {
+        eventToStore[`param${index}`] = param;
+    });
+    events.push(eventToStore);
 };
 
 let argumentsLogger = function (args) {
     console.log("Call to fbq captured. Arguments:");
-    for (let i = 0; i < args.length; i++) {
-        console.log(args[i]);
-    }
+    console.log(...args);
 }
 
