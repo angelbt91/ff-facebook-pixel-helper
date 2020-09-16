@@ -3,15 +3,10 @@ window.onload = function () {
 
     let originalFbq = window.wrappedJSObject.fbq;
 
-    newFbq = function (task, event, params = undefined) {
-        eventCatcher(`${task}, ${event}, ${params}`);
-
-        if (params) {
-            originalFbq(task, event, params);
-        } else {
-            originalFbq(task, event);
-        }
-    };
+    let newFbq = (...params) => {
+        eventCatcher(...params);
+        originalFbq(...params)
+    }
 
     // replace former fbq object in the page by our newFbq
     window.wrappedJSObject.fbq = cloneInto(
@@ -20,10 +15,18 @@ window.onload = function () {
         {cloneFunctions: true});
 
     // TODO catch events fired before plugin load
+}
 
-    let eventCatcher = function (value) {
-        // TODO send to popup
-        console.log("Call to fbq captured:", value);
-    };
+let eventCatcher = function (...params) {
+    argumentsLogger(arguments);
+
+    // TODO send to popup
+};
+
+let argumentsLogger = function (args) {
+    console.log("Call to fbq captured. Arguments:");
+    for (let i = 0; i < args.length; i++) {
+        console.log(args[i]);
+    }
 }
 
