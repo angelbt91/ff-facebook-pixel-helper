@@ -14,6 +14,8 @@ window.onload = function () {
         window,
         {cloneFunctions: true});
 
+    XPCNativeWrapper(window.wrappedJSObject.fbq); // we wrap the original object again
+
     // TODO catch events fired before plugin load
 }
 
