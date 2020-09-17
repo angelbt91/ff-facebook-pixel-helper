@@ -1,7 +1,8 @@
 window.onload = function () {
-    let originalFbq = window.wrappedJSObject.fbq;
 
-    let newFbq = (...params) => {
+    const originalFbq = window.wrappedJSObject.fbq;
+
+    const newFbq = (...params) => {
         eventCatcher(...params);
         originalFbq(...params)
     }
@@ -28,7 +29,7 @@ browser.runtime.onMessage.addListener(
     }
 );
 
-let eventCatcher = function (...params) {
+const eventCatcher = function (...params) {
     argumentsLogger(arguments);
 
     let eventToStore = {};
@@ -38,7 +39,7 @@ let eventCatcher = function (...params) {
     events.push(eventToStore);
 };
 
-let argumentsLogger = function (args) {
+const argumentsLogger = function (args) {
     console.log("Call to fbq captured. Arguments:");
     console.log(...args);
 }
