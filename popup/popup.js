@@ -13,7 +13,7 @@ const paintReport = function (events) {
         let text = document.createElement("p");
 
         if (action === "init") {
-            text.textContent = "PIXEL INITIATED";
+            text.textContent = `PIXEL INITIATED: ${event.param1}`;
         } else if (action === "track") {
             text.textContent = `EVENT FIRED: ${event.param1}.`;
         } else if (action === "trackcustom") {
