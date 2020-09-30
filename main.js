@@ -1,7 +1,15 @@
 let events = [];
 
-window.onload = function () {
+const eventCatcher = function (...params) {
+    // stores the params of the function call in the events array
+    let eventParams = {};
+    params.forEach((param, index) => {
+        eventParams[`param${index}`] = param;
+    });
+    events.push(eventParams);
+}
 
+window.onload = function () {
     const originalFbq = window.wrappedJSObject.fbq;
 
     const newFbq = (...params) => {
@@ -9,11 +17,12 @@ window.onload = function () {
         originalFbq(...params)
     }
 
-    // replace former fbq by our newFbq
+    // replace original fbq by our newFbq
     window.wrappedJSObject.fbq = cloneInto(newFbq, window, {cloneFunctions: true});
     // wrap the original object again
     XPCNativeWrapper(window.wrappedJSObject.fbq);
 
+    // retrieves the events fired before our fbq object replacing
     events = getEventsBeforeOnload();
 }
 
@@ -50,6 +59,7 @@ function getEventsBeforeOnload() {
     return eventsBeforeOnload;
 }
 
+// sends the registered events to the popup upon request
 browser.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (message.type === "getEvents") {
         sendResponse(events);
@@ -57,18 +67,3 @@ browser.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         console.error("Unrecognised message: ", message);
     }
 });
-
-const eventCatcher = function (...params) {
-    // argumentsLogger(arguments);
-
-    let eventToStore = {};
-    params.forEach((param, index) => {
-        eventToStore[`param${index}`] = param;
-    });
-    events.push(eventToStore);
-};
-
-const argumentsLogger = function (args) {
-    console.log("Call to fbq captured. Arguments:");
-    console.log(...args);
-}
