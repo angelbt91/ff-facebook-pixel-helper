@@ -18,6 +18,8 @@ const paintReport = function (events) {
             text.textContent = `EVENT FIRED: ${event.param1}.`;
         } else if (action === "trackcustom") {
             text.textContent = `CUSTOM EVENT FIRED: ${event.param1}.`
+        } else if (action === "set") {
+            text.textContent = `AGENT SET: ${event.param1}, ${event.param2}, ${event.param3}`
         }
 
         block.appendChild(text);
