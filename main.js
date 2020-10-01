@@ -1,6 +1,6 @@
 let events = [];
 
-const eventCatcher = function (...params) {
+const eventCatcher = (...params) => {
     // stores the params of the function call in the events array
     let eventParams = {};
     params.forEach((param, index) => {
@@ -9,7 +9,7 @@ const eventCatcher = function (...params) {
     events.push(eventParams);
 }
 
-window.onload = function () {
+window.onload = () => {
     const originalFbq = window.wrappedJSObject.fbq;
 
     const newFbq = (...params) => {
@@ -26,7 +26,7 @@ window.onload = function () {
     events = getEventsBeforeOnload();
 }
 
-function getEventsBeforeOnload() {
+const getEventsBeforeOnload = () => {
     let eventsBeforeOnload = [];
 
     // retrieve an array of the code on the page that contains fbq
@@ -38,20 +38,26 @@ function getEventsBeforeOnload() {
         });
 
     const fbqCallParametersRegex = /(?<=fbq\().*?(?=\);)/g
+    const objectParameterRegex = /(?={).*?(?<=})/g
+    const OBJECT_REPLACER = "OBJECT_REPLACED";
 
-    // iterate over each fbq call on each script and return its parameters
+    // iterate over each fbq call on each script and return its parameters formatted as an object
     scriptsWithFbq.forEach(script => {
         const fbqCalls = script.match(fbqCallParametersRegex);
 
         fbqCalls.forEach(fbqCall => {
-            // there might be objects in the params string
-            const objectsInParams = getObjectsInParams(fbqCall);// so we save the objects
-            const fbqCallWithoutObjects = replaceObjectsByString(fbqCall); // and replace them by a specific string
-            let paramsArray = fbqCallWithoutObjects.split(","); // we parse the params into an array of strings
-            paramsArray = putObjectsBackInParamsArray(paramsArray, objectsInParams); // we put back the objects where they belonged
-            const eventToSend = formatParamsIntoEvent(paramsArray); // and we format the array of params into an object that we'll save
+            /*
+             * we'll split the parameters string into an array using comma as the delimiter
+             * but there might be objects in the params string with commas in the middle
+             * so we have to temporarily remove the objects from the params string in order to not split them
+             */
+            const objectsInParams = fbqCall.match(objectParameterRegex); // we save the objects for later
+            const fbqCallWithoutObjects = replaceObjectsByString(fbqCall); // and replace them by a dummy string
+            let paramsArray = fbqCallWithoutObjects.split(","); // we parse the params string into an array
+            paramsArray = putObjectsBackInParamsArray(paramsArray, objectsInParams); // we put back the objects
+            const eventToSend = formatParamsIntoEvent(paramsArray); // and we format the array of params into an object
 
-            console.log("eventToSend after modification:");
+            console.log("eventToSend:");
             console.log(eventToSend);
 
             eventsBeforeOnload.push(eventToSend);
@@ -60,18 +66,12 @@ function getEventsBeforeOnload() {
 
     return eventsBeforeOnload;
 
-    function getObjectsInParams(params) {
-        const objectParameterRegex = /(?={).*?(?<=})/g
-        return params.match(objectParameterRegex);
-    }
-
     function replaceObjectsByString(paramsArray) {
-        const objectParameterRegex = /(?={).*?(?<=})/g
         const objectParams = paramsArray.match(objectParameterRegex);
 
         if (objectParams) {
             objectParams.forEach(objectParam => {
-                paramsArray = paramsArray.replace(objectParam, "object");
+                paramsArray = paramsArray.replace(objectParam, OBJECT_REPLACER);
             });
         }
 
@@ -79,9 +79,9 @@ function getEventsBeforeOnload() {
     }
 
     function putObjectsBackInParamsArray(paramsArray, objectsInParams) {
-        let i = 0;
+        let i = 0; // in case there are more than 1 object to put back in place, we keep the track of the index
         paramsArray.forEach((param, index) => {
-            if (param === "object") {
+            if (param === OBJECT_REPLACER) {
                 paramsArray[index] = objectsInParams[i];
                 i++;
             }
@@ -90,7 +90,7 @@ function getEventsBeforeOnload() {
     }
 
     function formatParamsIntoEvent(paramsArray) {
-        let eventToSend = {};
+        let event = {};
 
         paramsArray.forEach((param, index) => {
             let parsedParam;
@@ -101,15 +101,15 @@ function getEventsBeforeOnload() {
                 parsedParam = param;
             }
 
-            eventToSend[`param${index}`] = parsedParam;
+            event[`param${index}`] = parsedParam;
         });
 
-        return eventToSend;
+        return event;
     }
 }
 
 // sends the registered events to the popup upon request
-browser.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "getEvents") {
         sendResponse(events);
     } else {
