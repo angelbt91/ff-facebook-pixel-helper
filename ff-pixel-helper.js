@@ -1,3 +1,5 @@
+// TODO delete this code if it's still not used in the future
+/*
 let events = [];
 
 const eventCatcher = (...params) => {
@@ -21,14 +23,10 @@ window.onload = () => {
     window.wrappedJSObject.fbq = cloneInto(newFbq, window, {cloneFunctions: true});
     // wrap the original object again
     XPCNativeWrapper(window.wrappedJSObject.fbq);
-
-    // retrieves the events fired before our fbq object replacing
-    events = getEventsBeforeOnload();
 }
+*/
 
-const getEventsBeforeOnload = () => {
-    let eventsBeforeOnload = [];
-
+const getEvents = () => {
     // retrieve an array of the code on the page that contains fbq
     let scriptsWithFbq = [...document.getElementsByTagName("script")]
         .filter(script => {
@@ -37,13 +35,23 @@ const getEventsBeforeOnload = () => {
             return script.innerHTML;
         });
 
+    if (scriptsWithFbq.length === 0) {
+        return [];
+    }
+
     const fbqCallParametersRegex = /(?<=fbq\().*?(?=\);)/g
     const objectParameterRegex = /(?={).*?(?<=})/g
     const OBJECT_REPLACER = "OBJECT_REPLACED";
 
+    let events = [];
+
     // iterate over each fbq call on each script and return its parameters formatted as an object
     scriptsWithFbq.forEach(script => {
         const fbqCalls = script.match(fbqCallParametersRegex);
+
+        if (!fbqCalls) {
+            return;
+        }
 
         fbqCalls.forEach(fbqCall => {
             /*
@@ -57,14 +65,11 @@ const getEventsBeforeOnload = () => {
             paramsArray = putObjectsBackInParamsArray(paramsArray, objectsInParams); // we put back the objects
             const eventToSend = formatParamsIntoEvent(paramsArray); // and we format the array of params into an object
 
-            console.log("eventToSend:");
-            console.log(eventToSend);
-
-            eventsBeforeOnload.push(eventToSend);
+            events.push(eventToSend);
         });
     });
 
-    return eventsBeforeOnload;
+    return events;
 
     function replaceObjectsByString(paramsArray) {
         const objectParams = paramsArray.match(objectParameterRegex);
@@ -111,7 +116,7 @@ const getEventsBeforeOnload = () => {
 // sends the registered events to the popup upon request
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "getEvents") {
-        sendResponse(events);
+        sendResponse(getEvents());
     } else {
         console.error("Unrecognised message: ", message);
     }

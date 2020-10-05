@@ -14,7 +14,7 @@
   "browser_action": {
     "default_icon": "icons/icon-32x32.png",
     "default_title": "FF Pixel Helper",
-    "default_popup": "popup/popup.html"
+    "default_popup": "popup/build/index.html"
   },
 
   "content_scripts": [
