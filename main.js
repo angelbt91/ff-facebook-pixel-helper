@@ -1,31 +1,3 @@
-// TODO delete this code if it's still not used in the future
-/*
-let events = [];
-
-const eventCatcher = (...params) => {
-    // stores the params of the function call in the events array
-    let eventParams = {};
-    params.forEach((param, index) => {
-        eventParams[`param${index}`] = param;
-    });
-    events.push(eventParams);
-}
-
-window.onload = () => {
-    const originalFbq = window.wrappedJSObject.fbq;
-
-    const newFbq = (...params) => {
-        eventCatcher(...params);
-        originalFbq(...params)
-    }
-
-    // replace original fbq by our newFbq
-    window.wrappedJSObject.fbq = cloneInto(newFbq, window, {cloneFunctions: true});
-    // wrap the original object again
-    XPCNativeWrapper(window.wrappedJSObject.fbq);
-}
-*/
-
 const getEvents = () => {
     // retrieve an array of the code on the page that contains fbq
     let scriptsWithFbq = [...document.getElementsByTagName("script")]
@@ -58,8 +30,10 @@ const getEvents = () => {
              * we'll split the parameters string into an array using comma as the delimiter
              * but there might be objects in the params string with commas in the middle
              * so we have to temporarily remove the objects from the params string in order to not split them
+             * but first, we'll replace the call to google_tag_manager vars by the actual values
              */
-            const objectsInParams = fbqCall.match(objectParameterRegex); // we save the objects for later
+            fbqCall = replaceGtmVarsByValues(fbqCall); // replace the call to gtm variables to the actual values
+            const objectsInParams = fbqCall.match(objectParameterRegex); // we store the objects for later
             const fbqCallWithoutObjects = replaceObjectsByString(fbqCall); // and replace them by a dummy string
             let paramsArray = fbqCallWithoutObjects.split(","); // we parse the params string into an array
             paramsArray = putObjectsBackInParamsArray(paramsArray, objectsInParams); // we put back the objects
@@ -70,6 +44,22 @@ const getEvents = () => {
     });
 
     return events;
+
+    function replaceGtmVarsByValues(fbqCall) {
+        const gtmVarRegex = /(google_tag_manager(.*?)\))/g;
+        const matches = fbqCall.match(gtmVarRegex);
+
+        if (!matches) {
+            return fbqCall;
+        }
+
+        matches.forEach(match => {
+            const value = window.eval(match); // yes, I know...
+            fbqCall = fbqCall.replace(match, JSON.stringify(value));
+        });
+
+        return fbqCall;
+    }
 
     function replaceObjectsByString(paramsArray) {
         const objectParams = paramsArray.match(objectParameterRegex);
@@ -87,6 +77,11 @@ const getEvents = () => {
         let i = 0; // in case there are more than 1 object to put back in place, we keep the track of the index
         paramsArray.forEach((param, index) => {
             if (param === OBJECT_REPLACER) {
+                // we use dirty-json module to parse the JSON
+                // as JSON.parse() won't work when the property is not quoted
+                // we load this module with browserify
+                const dJSON = require('dirty-json');
+                objectsInParams[i] = dJSON.parse(objectsInParams[i]);
                 paramsArray[index] = objectsInParams[i];
                 i++;
             }
