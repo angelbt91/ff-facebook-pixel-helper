@@ -12,5 +12,5 @@ WIP
 
 `browserify main.js -o ff-pixel-helper.js`
 
-`cd popup && npm install & npm build`
+`cd popup && npm install & npm run build`
 
