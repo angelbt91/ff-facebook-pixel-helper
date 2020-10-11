@@ -6,60 +6,78 @@ import {AiFillRightCircle, AiFillRightSquare} from "react-icons/ai";
 function Event(props) {
     let event = props.event;
 
+    let printEvent = true;
+    let eventIcon;
+    let eventTitle;
+    let eventParameters;
+
+    const isValidPixelID = (value) => {
+        return value.match(/^[0-9]+$/) !== null;
+    }
+
+    const isStandardConversion = (conversionName) => {
+        const standardConversions = ["AddPaymentInfo", "AddToCart", "AddToWishlist", "CompleteRegistration",
+            "Contact", "CustomizeProduct", "Donate", "FindLocation", "InitiateCheckout", "Lead", "PageView",
+            "Purchase", "Schedule", "Search", "StartTrial", "SubmitApplication", "Subscribe", "ViewContent"]
+        return standardConversions.includes(conversionName);
+    }
+
+    const getEventParametersComponents = (event) => {
+        let paramComponents = [];
+        for (let param in event.param2) {
+            paramComponents.push(
+                <div className="parameter">
+                    <p className="parameterTitle">{param}</p>
+                    <p className="parameterValue">{JSON.stringify(event.param2[param])}</p>
+                </div>
+            );
+        }
+        return paramComponents;
+    }
+
+    switch (event.param0) {
+        case "init":
+            if (isValidPixelID(event.param1)) {
+                eventIcon = <MdInfo className="eventIcon"/>
+                eventTitle = `Pixel ${event.param1} initiated`;
+            }
+            break;
+        case "track":
+            if (isStandardConversion(event.param1)) {
+                eventIcon = <AiFillRightCircle className="eventIcon"/>;
+                eventTitle = event.param1;
+            }
+            if (event.param2) {
+                eventParameters = getEventParametersComponents(event);
+            }
+            break;
+        case "trackCustom":
+            eventIcon = <AiFillRightSquare className="eventIcon"/>;
+            eventTitle = event.param1;
+            if (event.param2) {
+                eventParameters = getEventParametersComponents(event);
+            }
+            break;
+        default:
+            printEvent = false;
+            break;
+    }
+
+    if (!printEvent) {
+        return null;
+    }
+
     return (
         <>
             <div className="event">
                 <div className="eventUpperBlock">
-                    <MdInfo className="eventIcon"/>
-                    <p className="eventTitle">Pixel 123456780 initiated</p>
-                </div>
-            </div>
-
-            <div className="event">
-                <div className="eventUpperBlock">
-                    <MdInfo className="eventIcon"/>
-                    <p className="eventTitle">Pixel 0123456789 initiated</p>
-                </div>
-            </div>
-
-            <div className="event">
-                <div className="eventUpperBlock">
-                    <AiFillRightCircle className="eventIcon"/>
-                    <p className="eventTitle">PageView</p>
-                </div>
-            </div>
-
-            <div className="event">
-                <div className="eventUpperBlock">
-                    <AiFillRightCircle className="eventIcon"/>
-                    <p className="eventTitle">ViewContent</p>
+                    {eventIcon}
+                    <p className="eventTitle">{eventTitle}</p>
                 </div>
                 <div className="eventLowerBlock">
-                    <div className="parameter">
-                        <p className="parameterTitle">content_ids:</p>
-                        <p className="parameterValue">["123", "456"]</p>
-                    </div>
-                    <div className="parameter">
-                        <p className="parameterTitle">contents:</p>
-                        <p className="parameterValue">["123", "456"]</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="event">
-                <div className="eventUpperBlock">
-                    <AiFillRightSquare className="eventIcon"/>
-                    <p className="eventTitle">CustomConversion</p>
-                </div>
-                <div className="eventLowerBlock">
-                    <div className="parameter">
-                        <p className="parameterTitle">content_ids:</p>
-                        <p className="parameterValue">["123", "456"]</p>
-                    </div>
-                    <div className="parameter">
-                        <p className="parameterTitle">contents:</p>
-                        <p className="parameterValue">["123", "456"]</p>
-                    </div>
+                    {eventParameters && eventParameters.map(event => {
+                        return event;
+                    })}
                 </div>
             </div>
         </>

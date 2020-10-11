@@ -1,10 +1,9 @@
 import React, {useState, useEffect} from 'react';
-import './App.css';
 import Header from "./components/Header";
 import Event from "./components/Event";
 
 function App() {
-    let [events, setEvents] = useState(["Nothing to show"]);
+    let [events, setEvents] = useState(null);
 
     useEffect(() => {
         /* eslint-disable no-undef */
@@ -20,9 +19,11 @@ function App() {
 
     return (
         <div className="bodyClass">
-            <Header />
+            <Header/>
             <div className="eventBody">
-                <Event />
+                {events ? events.map(event => {
+                    return <Event event={event}/>
+                }) : "Nothing to show"}
             </div>
         </div>
     );
