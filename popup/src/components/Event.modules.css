@@ -1,0 +1,36 @@
+.eventBody {
+    background-color: #282c34;
+    font-size: 12px;
+    padding: 10px;
+    color: white;
+}
+
+.event {
+    margin: 6px 6px 10px 6px;
+}
+
+.eventUpperBlock {
+    display: flex;
+    align-items: center;
+}
+
+.eventIcon {
+    font-size: 12px;
+}
+
+.eventTitle {
+    margin: 0 0 0 4px;
+}
+
+.eventLowerBlock {
+    margin-left: 16px;
+}
+
+.parameterTitle {
+    font-weight: 600;
+    margin: 6px 0 0 0;
+}
+
+.parameterValue {
+    margin: 0 0 0 7px;
+}

@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import './App.css';
-import Event from "./components/event";
+import Header from "./components/Header";
+import Event from "./components/Event";
 
 function App() {
     let [events, setEvents] = useState(["Nothing to show"]);
@@ -10,8 +11,6 @@ function App() {
         browser.tabs.query({active: true, currentWindow: true}, function (tabs) {
             browser.tabs.sendMessage(tabs[0].id, {type: "getEvents"}, function (eventsReceived) {
                 if (eventsReceived.length > 0) {
-                    console.log("Events received:");
-                    console.log(eventsReceived);
                     setEvents(eventsReceived);
                 }
             });
@@ -20,10 +19,11 @@ function App() {
     }, [])
 
     return (
-        <div>
-            <header className="App-header">
-                {events.map(event => { return <Event event={event}/> })}
-            </header>
+        <div className="bodyClass">
+            <Header />
+            <div className="eventBody">
+                <Event />
+            </div>
         </div>
     );
 }

@@ -1,0 +1,23 @@
+.header {
+    color: #282c34;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 7px;
+}
+
+.headerLogoAndTitle {
+    display: flex;
+    align-items: center;
+}
+
+.headerLogo {
+    width: 15px;
+    height: 15px;
+    border: 1px solid black;
+}
+
+.headerTitle {
+    margin: 9px 5px;
+    font-size: 12px;
+}
