@@ -9,7 +9,9 @@ function Header() {
                 <div className="headerLogo">.</div>
                 <p className="headerTitle">Firefox Facebook Pixel Helper</p>
             </div>
-            <AiOutlineQuestionCircle className="moreInfoIcon"/>
+            <a href="https://github.com/angelbt91/ff-pixel-helper" target="_blank" className="moreInfoIcon">
+                <AiOutlineQuestionCircle/>
+            </a>
         </div>
     )
 }
