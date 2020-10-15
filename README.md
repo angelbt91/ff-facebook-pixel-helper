@@ -10,7 +10,9 @@ WIP
 
 `npm install -g browserify`
 
-`browserify main.js -o ff-pixel-helper.js`
+`browserify content-pre.js -o content.js`
+
+`browserify background-pre.js -o background.js`
 
 `cd popup && npm install & npm run build`
 

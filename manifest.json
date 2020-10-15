@@ -20,7 +20,7 @@
   "content_scripts": [
     {
       "matches": ["*://*/*"],
-      "js": ["ff-pixel-helper.js"]
+      "js": ["content.js"]
     }
   ],
 
