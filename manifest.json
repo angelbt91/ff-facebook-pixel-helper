@@ -22,6 +22,12 @@
       "matches": ["*://*/*"],
       "js": ["ff-pixel-helper.js"]
     }
-  ]
+  ],
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "permissions": ["*://*/*", "webRequest"]
 
 }
