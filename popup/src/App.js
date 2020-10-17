@@ -7,15 +7,30 @@ function App() {
 
     useEffect(() => {
         /* eslint-disable no-undef */
-        browser.tabs.query({active: true, currentWindow: true}, function (tabs) {
-            browser.tabs.sendMessage(tabs[0].id, {type: "getEvents"}, function (eventsReceived) {
-                if (eventsReceived.length > 0) {
-                    setEvents(eventsReceived);
-                }
+        // requests the events upon opening the popup
+        browser.tabs.query({active: true, currentWindow: true}, tabs => {
+            const sending = browser.runtime.sendMessage({type: "getEvents", tabId: tabs[0].id});
+            sending.then(events => {
+                setEvents(events);
+            }, error => {
+                console.log("Couldn't retrieve data:", error);
             });
         });
+
+        // listens for new events when popup is already open
+        browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            if (message.type === "newEvent") {
+                setEvents([{
+                    // TODO dummy data, should be replaced by message.events
+                    "param0": "trackCustom",
+                    "param1": Math.floor(Math.random() * 10)
+                }]);
+            } else {
+                console.error("Unrecognised message: ", message);
+            }
+        });
         /* eslint-disable no-undef */
-    }, [])
+    }, []);
 
     return (
         <div className="bodyClass">

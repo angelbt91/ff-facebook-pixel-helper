@@ -108,11 +108,12 @@ const getEvents = () => {
     }
 }
 
+// TODO delete after switching system to background script
 // sends the registered events to the popup upon request
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === "getEvents") {
-        sendResponse(getEvents());
-    } else {
-        console.error("Unrecognised message: ", message);
-    }
-});
+// browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+//     if (message.type === "getEvents") {
+//         sendResponse(getEvents());
+//     } else {
+//         console.error("Unrecognised message: ", message);
+//     }
+// });
