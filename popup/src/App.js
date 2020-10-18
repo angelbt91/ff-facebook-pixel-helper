@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import "./App.css";
 import Header from "./components/Header";
 import Event from "./components/Event";
 
@@ -36,7 +37,7 @@ function App() {
     }, []);
 
     return (
-        <div className="bodyClass">
+        <div className="app">
             <Header/>
             <div className="eventBody">
                 {events ? events.map(event => {

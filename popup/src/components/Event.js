@@ -13,10 +13,10 @@ function Event(props) {
         let paramComponents = [];
         for (let param in event.param2) {
             paramComponents.push(
-                <div className="parameter">
+                <>
                     <p className="parameterTitle">{param}</p>
                     <p className="parameterValue">{JSON.stringify(event.param2[param])}</p>
-                </div>
+                </>
             );
         }
         return paramComponents;

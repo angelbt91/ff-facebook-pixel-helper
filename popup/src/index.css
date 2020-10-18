@@ -1,10 +1,10 @@
 @import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap");
 
-body {
+body, #root {
     font-family: "Open Sans", sans-serif;
+    font-size: 12px;
     width: 300px;
     min-height: 200px;
-    max-height: 800px;
     margin: 0;
     background-color: #282c34;
     overflow-x: hidden;
