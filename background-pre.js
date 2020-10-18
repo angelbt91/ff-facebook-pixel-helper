@@ -3,7 +3,8 @@ let fbRequests = [];
 // listens to network calls to facebook.com and facebook.net and sends them to registerCalls
 browser.webRequest.onCompleted.addListener(registerCalls, {urls: ["*://*.facebook.com/*", "*://*.facebook.net/*"]});
 
-// listens to the popup requesting the events upon opening
+// listens to the popup message that requests the events upon opening
+// and sends back the corresponding events to the active tab
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "getEvents") {
         const tabEvents = fbRequests.find((request) => {
@@ -37,7 +38,7 @@ function registerCalls(details) {
     });
 
     if (index === -1) {
-        // if there's no match,then we push a new element to the array
+        // if there's no match, then we push a new element to the array
         fbRequests.push({
             "tabId": details.tabId,
             "documentUrl": details.documentUrl,
@@ -53,7 +54,7 @@ function registerCalls(details) {
     }
 
     browser.runtime.sendMessage({type: "newEvent", events: fbRequests}); // sending new events to the popup if it's open
-    console.log(fbRequests); // debugging purposes, remove
+    console.log(fbRequests); // TODO debugging purposes, remove
 }
 
 function formatEvent(url) {
