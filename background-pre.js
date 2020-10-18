@@ -10,20 +10,26 @@ function registerCalls(details) {
         return request.tabId === details.tabId;
     });
 
+    const eventFormatted = formatEvent(details.url);
+
     if (index === -1) {
         // if there's no match,then we push a new element to the array
-        fbRequests.push({
-            "tabId": details.tabId,
-            "documentUrl": details.documentUrl,
-            "events": [formatEvent(details.url)]
-        })
+        if (eventFormatted) {
+            fbRequests.push({
+                "tabId": details.tabId,
+                "documentUrl": details.documentUrl,
+                "events": [eventFormatted]
+            });
+        }
     } else {
         // if we changed the page inside the same tab, we remove the calls stored for that tab and start again
         if (fbRequests[index].documentUrl !== details.documentUrl) {
             fbRequests[index].documentUrl = details.documentUrl;
             fbRequests[index].events = [];
         }
-        fbRequests[index].events.push(formatEvent(details.url));
+        if (eventFormatted) {
+            fbRequests[index].events.push(eventFormatted);
+        }
     }
 
     browser.runtime.sendMessage({type: "newEvent", events: fbRequests}); // sending new events to the popup if it's open
@@ -32,8 +38,54 @@ function registerCalls(details) {
 
 function formatEvent(url) {
     const queryString = require('query-string');
-    return queryString.parseUrl(url);
-    // TODO apply proper format
+    const urlParsed = queryString.parseUrl(url);
+
+    // CASE 1: IS A INIT CALL
+    if (urlParsed.url.includes("https://connect.facebook.net/signals/config/")) {
+        const pixelIdInUrl = urlParsed.url.match(/\d+/g)[0];
+        return {
+            "param0": "init",
+            "param1": pixelIdInUrl
+        }
+    }
+
+    // CASE 2: IS AS TRACK CALL
+    if (urlParsed.url === "https://www.facebook.com/tr/" && urlParsed.query.ev) {
+        let event = {
+            "param0": isStandardConversion(urlParsed.query.ev) ? "track" : "trackCustom",
+            "param1": urlParsed.query.ev
+        }
+
+        const eventParamRegex = /cd\[.*?]/g
+        let param2 = {};
+        for (let key in urlParsed.query) {
+            if (eventParamRegex.test(key)) {
+                const eventParamNameRegex = /(?<=\[).+?(?=])/g;
+                param2[key.match(eventParamNameRegex)[0]] = urlParsed.query[key];
+            }
+        }
+
+        if (!isEmpty(param2)) {
+            event = {
+                ...event,
+                param2: param2
+            }
+        }
+
+        return event;
+    }
+}
+
+function isEmpty(obj) {
+    for(var i in obj) return false;
+    return true;
+}
+
+function isStandardConversion(conversionName) {
+    const standardConversions = ["AddPaymentInfo", "AddToCart", "AddToWishlist", "CompleteRegistration",
+        "Contact", "CustomizeProduct", "Donate", "FindLocation", "InitiateCheckout", "Lead", "PageView",
+        "Purchase", "Schedule", "Search", "StartTrial", "SubmitApplication", "Subscribe", "ViewContent"]
+    return standardConversions.includes(conversionName);
 }
 
 // listens to network calls to facebook.com and facebook.net and sends them to registerCalls
@@ -49,11 +101,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (typeof (tabEvents) === undefined) {
             console.log("No events for this tab");
         } else {
-            sendResponse([{
-                // TODO dummy data, should be replaced by fbRequests filtered by tabId === message.tabId
-                "param0": "trackCustom",
-                "param1": "PageView"
-            }]);
+            sendResponse(tabEvents.events);
         }
     } else {
         console.error("Unrecognised message: ", message);

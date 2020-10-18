@@ -19,15 +19,18 @@ function App() {
 
         // listens for new events when popup is already open
         browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            if (message.type === "newEvent") {
-                setEvents([{
-                    // TODO dummy data, should be replaced by message.events
-                    "param0": "trackCustom",
-                    "param1": Math.floor(Math.random() * 10)
-                }]);
-            } else {
-                console.error("Unrecognised message: ", message);
-            }
+            browser.tabs.query({active: true, currentWindow: true}, tabs => {
+                if (message.type === "newEvent") {
+                    const thisTabEvents = message.events.find(event => {
+                        return event.tabId === tabs[0].id
+                    })
+                    if (thisTabEvents) {
+                        setEvents(thisTabEvents.events);
+                    }
+                } else {
+                    console.error("Unrecognised message: ", message);
+                }
+            })
         });
         /* eslint-disable no-undef */
     }, []);
