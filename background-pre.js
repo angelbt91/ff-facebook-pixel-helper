@@ -3,21 +3,34 @@ let fbRequests = [];
 // listens to network calls to facebook.com and facebook.net and sends them to registerCalls
 browser.webRequest.onCompleted.addListener(registerCalls, {urls: ["*://*.facebook.com/*", "*://*.facebook.net/*"]});
 
-// listens to the popup message that requests the events upon opening
-// and sends back the corresponding events to the active tab
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === "getEvents") {
-        const tabEvents = fbRequests.find((request) => {
-            return request.tabId === message.tabId;
-        });
+    switch (message.type) {
+        case "getEvents":
+            // listens to the popup message that requests the events upon opening
+            // and sends back the corresponding events to the active tab
+            const tabEvents = fbRequests.find((request) => {
+                return request.tabId === message.tabId;
+            });
 
-        if (tabEvents) {
-            sendResponse(tabEvents.events);
-        } else {
-            console.log("No events for this tab");
-        }
-    } else {
-        console.error("Unrecognised message: ", message);
+            if (tabEvents) {
+                sendResponse(tabEvents.events);
+            } else {
+                console.log("No events for this tab");
+            }
+            break;
+        case "tabReloaded":
+            // removes events stored for a tabID when the tab is reloaded
+            const index = fbRequests.findIndex(request => {
+                return sender.tab.id === request.tabId;
+            })
+
+            if (index !== -1) {
+                fbRequests[index].events = [];
+            }
+            break;
+        default:
+            console.error("Unrecognised message: ", message);
+            break;
     }
 });
 
@@ -54,7 +67,6 @@ function registerCalls(details) {
     }
 
     browser.runtime.sendMessage({type: "newEvent", events: fbRequests}); // sending new events to the popup if it's open
-    console.log(fbRequests); // TODO debugging purposes, remove
 }
 
 function formatEvent(url) {
@@ -121,5 +133,3 @@ function formatEvent(url) {
         return true;
     }
 }
-
-// TODO remove events array when a tab is reloaded
