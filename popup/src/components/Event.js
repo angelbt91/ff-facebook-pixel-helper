@@ -5,22 +5,9 @@ import {AiFillRightCircle, AiFillRightSquare} from "react-icons/ai";
 
 function Event(props) {
     let event = props.event;
-
-    let printEvent = true;
-    let eventIcon;
-    let eventTitle;
-    let eventParameters;
-
-    const isValidPixelID = (value) => {
-        return value.match(/^[0-9]+$/) !== null;
-    }
-
-    const isStandardConversion = (conversionName) => {
-        const standardConversions = ["AddPaymentInfo", "AddToCart", "AddToWishlist", "CompleteRegistration",
-            "Contact", "CustomizeProduct", "Donate", "FindLocation", "InitiateCheckout", "Lead", "PageView",
-            "Purchase", "Schedule", "Search", "StartTrial", "SubmitApplication", "Subscribe", "ViewContent"]
-        return standardConversions.includes(conversionName);
-    }
+    let eventIcon,
+        eventTitle,
+        eventParameters;
 
     const getEventParametersComponents = (event) => {
         let paramComponents = [];
@@ -37,16 +24,12 @@ function Event(props) {
 
     switch (event.param0) {
         case "init":
-            if (isValidPixelID(event.param1)) {
-                eventIcon = <MdInfo className="eventIcon"/>
-                eventTitle = `Pixel ${event.param1} initiated`;
-            }
+            eventIcon = <MdInfo className="eventIcon"/>
+            eventTitle = `Pixel ${event.param1} initiated`;
             break;
         case "track":
-            if (isStandardConversion(event.param1)) {
-                eventIcon = <AiFillRightCircle className="eventIcon"/>;
-                eventTitle = event.param1;
-            }
+            eventIcon = <AiFillRightCircle className="eventIcon"/>;
+            eventTitle = event.param1;
             if (event.param2) {
                 eventParameters = getEventParametersComponents(event);
             }
@@ -59,12 +42,7 @@ function Event(props) {
             }
             break;
         default:
-            printEvent = false;
             break;
-    }
-
-    if (!printEvent) {
-        return null;
     }
 
     return (
