@@ -1,13 +1,15 @@
-import React from "react";
+import React, {useState} from "react";
 import "./Event.modules.css";
 import {MdInfo} from "react-icons/md";
-import {AiFillRightCircle, AiFillRightSquare} from "react-icons/ai";
+import {AiFillRightCircle, AiFillRightSquare, AiOutlineRight, AiOutlineDown} from "react-icons/ai";
 
 function Event(props) {
     let event = props.event;
     let eventIcon,
         eventTitle,
         eventParameters;
+
+    const [showParamsBlock, setShowParamsBlock] = useState(false);
 
     const getEventParametersComponents = (event) => {
         let paramComponents = [];
@@ -51,12 +53,22 @@ function Event(props) {
                 <div className="eventUpperBlock">
                     {eventIcon}
                     <p className="eventTitle">{eventTitle}</p>
+                    {eventParameters && (showParamsBlock ?
+                            <span className="showParamsIcon" onClick={e => {
+                                setShowParamsBlock(!showParamsBlock)
+                            }}><AiOutlineDown/></span> :
+                            <span className="showParamsIcon" onClick={e => {
+                                setShowParamsBlock(!showParamsBlock)
+                            }}><AiOutlineRight/></span>
+                    )}
                 </div>
+                {showParamsBlock &&
                 <div className="eventLowerBlock">
                     {eventParameters && eventParameters.map(event => {
                         return event;
                     })}
                 </div>
+                }
             </div>
         </>
     )
