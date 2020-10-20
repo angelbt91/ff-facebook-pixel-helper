@@ -21,15 +21,21 @@ function App() {
         // listens for new events when popup is already open
         browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             browser.tabs.query({active: true, currentWindow: true}, tabs => {
-                if (message.type === "newEvent") {
-                    const thisTabEvents = message.events.find(event => {
-                        return event.tabId === tabs[0].id
-                    })
-                    if (thisTabEvents) {
-                        setEvents(thisTabEvents.events);
-                    }
-                } else {
-                    console.error("Unrecognised message: ", message);
+                switch (message.type) {
+                    case "newEvent":
+                        const thisTabEvents = message.events.find(event => {
+                            return event.tabId === tabs[0].id
+                        })
+                        if (thisTabEvents) {
+                            setEvents(thisTabEvents.events);
+                        }
+                        break;
+                    case "tabReloaded":
+                        // to avoid App.js logging that doesn't recognises the message
+                        break;
+                    default:
+                        console.error("Unrecognised message: ", message);
+                        break;
                 }
             })
         });
