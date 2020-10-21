@@ -2,6 +2,7 @@ import React, {useState} from "react";
 import "./Event.modules.css";
 import {MdInfo} from "react-icons/md";
 import {AiFillRightCircle, AiFillRightSquare, AiOutlineRight, AiOutlineDown} from "react-icons/ai";
+import {RiFileInfoFill} from "react-icons/ri"
 
 function Event(props) {
     let event = props.event;
@@ -38,6 +39,13 @@ function Event(props) {
             break;
         case "trackCustom":
             eventIcon = <AiFillRightSquare className="eventIcon"/>;
+            eventTitle = event.param1;
+            if (event.param2) {
+                eventParameters = getEventParametersComponents(event);
+            }
+            break;
+        case "microdata":
+            eventIcon = <RiFileInfoFill className="eventIcon"/>;
             eventTitle = event.param1;
             if (event.param2) {
                 eventParameters = getEventParametersComponents(event);

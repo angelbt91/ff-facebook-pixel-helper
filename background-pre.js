@@ -85,7 +85,7 @@ function formatEvent(url) {
         let param2 = getParam2IfExists(urlParsed.query);
 
         return {
-            "param0": isStandardConversion(urlParsed.query.ev) ? "track" : "trackCustom",
+            "param0": isMicrodataCall(urlParsed.url) ? "microdata" : isStandardConversion(urlParsed.query.ev) ? "track" : "trackCustom",
             "param1": urlParsed.query.ev,
             ...(param2 && {param2: param2})
         }
@@ -97,6 +97,10 @@ function formatEvent(url) {
 
     function isTrackCall(url) {
         return url === "https://www.facebook.com/tr/" && urlParsed.query.ev;
+    }
+
+    function isMicrodataCall(url) {
+        return url === "https://www.facebook.com/tr/" && urlParsed.query.ev && urlParsed.query.ev === "Microdata";
     }
 
     function isStandardConversion(conversionName) {
