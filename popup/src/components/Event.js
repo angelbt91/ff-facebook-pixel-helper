@@ -17,7 +17,7 @@ function Event(props) {
             paramComponents.push(
                 <>
                     <p className="parameterTitle">{param}</p>
-                    <p className="parameterValue">{JSON.stringify(event.param2[param])}</p>
+                    <p className="parameterValue">{event.param2[param]}</p>
                 </>
             );
         }
