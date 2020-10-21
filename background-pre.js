@@ -109,13 +109,13 @@ function formatEvent(url) {
     function getParam2IfExists(queries) {
         let param2 = {};
 
-        const eventParamRegex = /cd\[.*?]/g;
-        for (let key in queries) {
+        const eventParamRegex = /cd\[.*?]/;
+        Object.keys(queries).forEach(key => {
             if (eventParamRegex.test(key)) {
-                const eventParamNameRegex = /(?<=\[).+?(?=])/g;
+                const eventParamNameRegex = /(?<=\[).+?(?=])/;
                 param2[key.match(eventParamNameRegex)[0]] = queries[key];
             }
-        }
+        });
 
         if (isEmpty(param2)) {
             return null;
