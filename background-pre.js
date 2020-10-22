@@ -1,95 +1,74 @@
-let fbRequests = [];
+let tabsEvents = [];
 
-// listens to network calls to facebook.com and facebook.net and sends them to registerCalls
-browser.webRequest.onCompleted.addListener(registerCalls, {urls: ["*://*.facebook.com/*", "*://*.facebook.net/*"]});
+// listens to network calls to facebook.com/.net and sends them to registerRequest to store the relevant events
+browser.webRequest.onCompleted.addListener(registerRequests, {urls: ["*://*.facebook.com/*", "*://*.facebook.net/*"]});
 
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    switch (message.type) {
-        case "getEvents":
-            // listens to the popup message that requests the events upon opening
-            // and sends back the corresponding events to the active tab
-            const tabEvents = fbRequests.find((request) => {
-                return request.tabId === message.tabId;
-            });
-
-            if (tabEvents) {
-                sendResponse(tabEvents.events);
-            } else {
-                console.log("No events for this tab");
-            }
-            break;
-        default:
-            console.error("Unrecognised message: ", message);
-            break;
-    }
-});
-
-function registerCalls(details) {
-    if (details.statusCode !== 200) {
-        return; // ignore requests that don't succeed
+function registerRequests(request) {
+    if (request.statusCode !== 200) {
+        return;
     }
 
-    const eventFormatted = formatEvent(details.url);
+    const event = formatRequestIntoEvent(request.url);
 
-    if (!eventFormatted) {
-        return; // ignore if it's not an init or track fbq event
+    if (!event) {
+        return; // stops if it's not a valid event
     }
 
-    // find the events in the array that corresponds to this tab
-    const index = fbRequests.findIndex((request) => {
-        return request.tabId === details.tabId;
+    // finds the index in tabsEvents that corresponds to the tab of the current event
+    const currentTabEventsIndex = tabsEvents.findIndex((tabEvents) => {
+        return tabEvents.tabId === request.tabId;
     });
 
-    if (index === -1) {
-        // if there's no match, then we push a new element to the array
-        fbRequests.push({
-            "tabId": details.tabId,
-            "documentUrl": details.documentUrl,
-            "events": [eventFormatted]
+    if (currentTabEventsIndex === -1) {
+        // if there's no events already stored for the current tab, pushes a new tab to the array
+        tabsEvents.push({
+            "tabId": request.tabId,
+            "documentUrl": request.documentUrl,
+            "events": [event]
         });
     } else {
-        if (fbRequests[index].documentUrl !== details.documentUrl) {
-            // if we changed the page inside the same tab, we remove the calls stored for that tab and start again
-            fbRequests[index].documentUrl = details.documentUrl;
-            fbRequests[index].events = [];
+        if (tabsEvents[currentTabEventsIndex].documentUrl !== request.documentUrl) {
+            // if user navigated to another page inside the same tab, removes the former events stored for such tab
+            tabsEvents[currentTabEventsIndex].documentUrl = request.documentUrl;
+            tabsEvents[currentTabEventsIndex].events = [];
         }
-        fbRequests[index].events.push(eventFormatted);
+        tabsEvents[currentTabEventsIndex].events.push(event);
     }
 
-    browser.runtime.sendMessage({type: "newEvent", events: fbRequests}); // sending new events to the popup if it's open
+    browser.runtime.sendMessage({type: "newEvent", events: tabsEvents}); // sends events to popup as they occur
 }
 
-function formatEvent(url) {
+function formatRequestIntoEvent(url) {
     const queryString = require('query-string');
     const urlParsed = queryString.parseUrl(url);
 
-    if (isInitCall(urlParsed.url)) {
+    if (isInitEvent(urlParsed.url)) {
         const pixelIdInUrl = urlParsed.url.match(/\d+/g)[0];
         return {
             "param0": "init",
             "param1": pixelIdInUrl
         }
-    }
-
-    if (isTrackCall(urlParsed.url)) {
+    } else if (isTrackEvent(urlParsed.url)) {
         let param2 = getParam2IfExists(urlParsed.query);
 
         return {
-            "param0": isMicrodataCall(urlParsed.url) ? "microdata" : isStandardConversion(urlParsed.query.ev) ? "track" : "trackCustom",
+            "param0": isMicrodataEvent(urlParsed.url) ? "microdata" : isStandardConversion(urlParsed.query.ev) ? "track" : "trackCustom",
             "param1": urlParsed.query.ev,
             ...(param2 && {param2: param2})
         }
+    } else {
+        return null;
     }
 
-    function isInitCall(url) {
+    function isInitEvent(url) {
         return url.includes("https://connect.facebook.net/signals/config/");
     }
 
-    function isTrackCall(url) {
+    function isTrackEvent(url) {
         return url === "https://www.facebook.com/tr/" && urlParsed.query.ev;
     }
 
-    function isMicrodataCall(url) {
+    function isMicrodataEvent(url) {
         return url === "https://www.facebook.com/tr/" && urlParsed.query.ev && urlParsed.query.ev === "Microdata";
     }
 
@@ -106,7 +85,9 @@ function formatEvent(url) {
         const eventParamRegex = /cd\[.*?]/;
         Object.keys(queries).forEach(key => {
             if (eventParamRegex.test(key)) {
+                // queries' keys are formatted as "cd[xxxxxx]" (i.e., "cd[content_category]")
                 const eventParamNameRegex = /(?<=\[).+?(?=])/;
+                // puts the string inside square brackets as the object's key
                 param2[key.match(eventParamNameRegex)[0]] = queries[key];
             }
         });
@@ -131,12 +112,32 @@ function formatEvent(url) {
 // empty events from current tab if user reloads it
 browser.webNavigation.onCommitted.addListener(function (details) {
     if (details.transitionType === "reload") {
-        const tabEvents = fbRequests.find((request) => {
-            return request.tabId === details.tabId;
+        const reloadedTabEvents = tabsEvents.find((tabEvents) => {
+            return tabEvents.tabId === details.tabId;
         });
 
-        if (tabEvents) {
-            tabEvents.events = [];
+        if (reloadedTabEvents) {
+            reloadedTabEvents.events = [];
         }
+    }
+});
+
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    switch (message.type) {
+        case "getEvents":
+            // listens to the popup message that requests the events upon opening
+            const requestedTabEvents = tabsEvents.find((tabEvents) => {
+                return tabEvents.tabId === message.tabId;
+            });
+
+            if (requestedTabEvents) {
+                sendResponse(requestedTabEvents.events);
+            } else {
+                console.log("No events for this tab");
+            }
+            break;
+        default:
+            console.error("Unrecognised message: ", message);
+            break;
     }
 });
