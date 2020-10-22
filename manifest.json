@@ -17,17 +17,10 @@
     "default_popup": "popup/build/index.html"
   },
 
-  "content_scripts": [
-    {
-      "matches": ["*://*/*"],
-      "js": ["content.js"]
-    }
-  ],
-
   "background": {
     "scripts": ["background.js"]
   },
 
-  "permissions": ["*://*/*", "webRequest"]
+  "permissions": ["*://*/*", "webRequest", "webNavigation"]
 
 }
