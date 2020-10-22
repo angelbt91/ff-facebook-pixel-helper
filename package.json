@@ -2,7 +2,7 @@
   "name": "ff-pixel-helper",
   "version": "1.0.0",
   "description": "",
-  "main": "content.js",
+  "main": "background.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

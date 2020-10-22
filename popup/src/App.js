@@ -30,9 +30,6 @@ function App() {
                             setEvents(thisTabEvents.events);
                         }
                         break;
-                    case "tabReloaded":
-                        // to avoid App.js logging that doesn't recognises the message
-                        break;
                     default:
                         console.error("Unrecognised message: ", message);
                         break;

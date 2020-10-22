@@ -18,16 +18,6 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 console.log("No events for this tab");
             }
             break;
-        case "tabReloaded":
-            // removes events stored for a tabID when the tab is reloaded
-            const index = fbRequests.findIndex(request => {
-                return sender.tab.id === request.tabId;
-            })
-
-            if (index !== -1) {
-                fbRequests[index].events = [];
-            }
-            break;
         default:
             console.error("Unrecognised message: ", message);
             break;
@@ -137,3 +127,16 @@ function formatEvent(url) {
         return true;
     }
 }
+
+// empty events from current tab if user reloads it
+browser.webNavigation.onCommitted.addListener(function (details) {
+    if (details.transitionType === "reload") {
+        const tabEvents = fbRequests.find((request) => {
+            return request.tabId === details.tabId;
+        });
+
+        if (tabEvents) {
+            tabEvents.events = [];
+        }
+    }
+});
