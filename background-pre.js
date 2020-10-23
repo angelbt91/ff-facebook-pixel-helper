@@ -35,7 +35,14 @@ function registerRequests(request) {
         tabsEvents[currentTabEventsIndex].events.push(event);
     }
 
-    browser.runtime.sendMessage({type: "newEvent", events: tabsEvents}); // sends events to popup as they occur
+    if (isPopupOpen()) {
+        browser.runtime.sendMessage({type: "newEvent", events: tabsEvents}); // sends events to popup as they occur
+    }
+
+    function isPopupOpen() {
+        const popupView = browser.extension.getViews({ type: "popup" });
+        return popupView.length > 0;
+    }
 }
 
 function formatRequestIntoEvent(url) {
