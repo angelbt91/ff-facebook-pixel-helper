@@ -1,5 +1,13 @@
 let tabsEvents = [];
 
+browser.browserAction.setBadgeBackgroundColor({
+    color: "#75b640"
+});
+
+browser.browserAction.setBadgeTextColor({
+    color: "#FFF"
+});
+
 // listens to network calls to facebook.com/.net and sends them to registerRequest to store the relevant events
 browser.webRequest.onCompleted.addListener(registerRequests, {urls: ["*://*.facebook.com/*", "*://*.facebook.net/*"]});
 
@@ -15,7 +23,7 @@ function registerRequests(request) {
     }
 
     // finds the index in tabsEvents that corresponds to the tab of the current event
-    const currentTabEventsIndex = tabsEvents.findIndex((tabEvents) => {
+    let currentTabEventsIndex = tabsEvents.findIndex((tabEvents) => {
         return tabEvents.tabId === request.tabId;
     });
 
@@ -26,6 +34,7 @@ function registerRequests(request) {
             "documentUrl": request.documentUrl,
             "events": [event]
         });
+        currentTabEventsIndex = tabsEvents.length - 1; // the index is now the last element
     } else {
         if (tabsEvents[currentTabEventsIndex].documentUrl !== request.documentUrl) {
             // if user navigated to another page inside the same tab, removes the former events stored for such tab
@@ -34,6 +43,11 @@ function registerRequests(request) {
         }
         tabsEvents[currentTabEventsIndex].events.push(event);
     }
+
+    browser.browserAction.setBadgeText({
+        text: tabsEvents[currentTabEventsIndex].events.length.toString(),
+        tabId: request.tabId
+    })
 
     if (isPopupOpen()) {
         browser.runtime.sendMessage({type: "newEvent", events: tabsEvents}); // sends events to popup as they occur
