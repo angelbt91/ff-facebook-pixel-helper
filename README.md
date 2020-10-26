@@ -28,7 +28,7 @@ Install dependencies:
 Install the Browserify util globally, in order to generate the background script:
 ```
 $ npm install -g browserify
-$ browserify background-pre.js -o background.js
+$ browserify background-pre.js -o ff-pixel-helper-background.js
 ```
 
 Get into the popup folder, install dependencies and generate the static files:
