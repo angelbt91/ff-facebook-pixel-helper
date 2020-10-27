@@ -1,4 +1,4 @@
-# FF Pixel Helper
+# FF Facebook Pixel Helper
 
 Unofficial Facebook Pixel Helper extension for Firefox. View all Facebook events fired on the current page.
 
@@ -6,9 +6,13 @@ Unofficial Facebook Pixel Helper extension for Firefox. View all Facebook events
 
 This Firefox extension emulates the [original Facebook Pixel Helper extension](https://chrome.google.com/webstore/detail/facebook-pixel-helper/fdgfkebogiimcoedlicjlajpkdmockpc) made by Facebook, which is only available in Chrome.
 
-Please note that this extension is fairly experimental and can't guarantee the same accuracy level as the original one. In any case, if you encounter any bug or have any suggestion, feel free to report it on the [Issues tab](https://github.com/angelbt91/ff-pixel-helper/issues). 
+Please note that this extension can't guarantee the same accuracy level as the original one. In any case, if you encounter any bug or have any suggestion, feel free to report it on the [Issues tab](https://github.com/angelbt91/ff-pixel-helper/issues). 
 
 This extension is not endorsed nor recommended by Facebook.
+
+## Usage
+
+Install this extension from the [Firefox's Add-on Library](https://addons.mozilla.org/en-US/firefox/addon/ff-facebook-pixel-helper/).
 
 ## Deployment
 
@@ -16,8 +20,8 @@ Follow these steps if you want to deploy a local copy of the extension from its 
 
 Clone this repository and get into the folder:
 ```
-$ git clone https://github.com/angelbt91/ff-pixel-helper.git
-$ cd ff-pixel-helper
+$ git clone https://github.com/angelbt91/ff-facebook-pixel-helper.git
+$ cd ff-facebook-pixel-helper
 ```
 
 
@@ -28,7 +32,7 @@ Install dependencies:
 Install the Browserify util globally, in order to generate the background script:
 ```
 $ npm install -g browserify
-$ browserify background-pre.js -o ff-pixel-helper-background.js
+$ browserify background-pre.js -o ff-facebook-pixel-helper-background.js
 ```
 
 Get into the popup folder, install dependencies and generate the static files:
