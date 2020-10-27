@@ -1,22 +1,22 @@
 {
-  "name": "ff-pixel-helper",
-  "version": "1.0.3",
+  "name": "ff-facebook-pixel-helper",
+  "version": "1.0.4",
   "description": "Unofficial Facebook Pixel Helper extension for Firefox. View all Facebook events fired on the current page.",
-  "main": "ff-pixel-helper-background.js",
+  "main": "ff-facebook-pixel-helper-background.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/angelbt91/ff-pixel-helper.git"
+    "url": "git+https://github.com/angelbt91/ff-facebook-pixel-helper.git"
   },
   "keywords": [],
   "author": "angelbt91@gmail.com",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/angelbt91/ff-pixel-helper/issues"
+    "url": "https://github.com/angelbt91/ff-facebook-pixel-helper/issues"
   },
-  "homepage": "https://github.com/angelbt91/ff-pixel-helper#readme",
+  "homepage": "https://github.com/angelbt91/ff-facebook-pixel-helper#readme",
   "dependencies": {
     "query-string": "^6.13.5"
   }

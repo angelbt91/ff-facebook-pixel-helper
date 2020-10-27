@@ -1,8 +1,8 @@
 {
 
   "manifest_version": 2,
-  "name": "FF Pixel Helper",
-  "version": "1.0.3",
+  "name": "FF Facebook Pixel Helper",
+  "version": "1.0.4",
 
   "description": "Unofficial Facebook Pixel Helper extension for Firefox. View all Facebook events fired on the current page.",
 
@@ -13,12 +13,12 @@
 
   "browser_action": {
     "default_icon": "icons/icon-32x32.png",
-    "default_title": "FF Pixel Helper",
+    "default_title": "FF Facebook Pixel Helper",
     "default_popup": "popup/build/index.html"
   },
 
   "background": {
-    "scripts": ["ff-pixel-helper-background.js"]
+    "scripts": ["ff-facebook-pixel-helper-background.js"]
   },
 
   "permissions": ["*://*/*", "webRequest", "webNavigation"]
