@@ -6,9 +6,7 @@ Unofficial Facebook Pixel Helper extension for Firefox. View all Facebook events
 
 This Firefox extension emulates the [original Facebook Pixel Helper extension](https://chrome.google.com/webstore/detail/facebook-pixel-helper/fdgfkebogiimcoedlicjlajpkdmockpc) made by Facebook, which is only available in Chrome.
 
-Please note that this extension can't guarantee the same accuracy level as the original one. In any case, if you encounter any bug or have any suggestion, feel free to report it on the [Issues tab](https://github.com/angelbt91/ff-pixel-helper/issues). 
-
-This extension is not endorsed nor recommended by Facebook.
+This extension is not endorsed nor recommended by Facebook. If you encounter any bug or have any suggestion, feel free to report it on the [Issues page](https://github.com/angelbt91/ff-facebook-pixel-helper/issues). 
 
 ## Usage
 
