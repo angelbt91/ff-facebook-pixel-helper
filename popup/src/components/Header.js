@@ -8,9 +8,9 @@ function Header() {
         <div className="header">
             <div className="headerLogoAndTitle">
                 <img src={Icon} className="headerLogo" alt="Firefox Facebook Helper"/>
-                <p className="headerTitle">Firefox Facebook Pixel Helper</p>
+                <p className="headerTitle">FF Facebook Pixel Helper</p>
             </div>
-            <a href="https://github.com/angelbt91/ff-pixel-helper" target="_blank" className="moreInfoIcon">
+            <a href="https://github.com/angelbt91/ff-pixel-helper" target="_blank" rel="noopener noreferrer" className="moreInfoIcon">
                 <AiOutlineQuestionCircle/>
             </a>
         </div>
