@@ -32,30 +32,49 @@ function registerRequests(request) {
         tabsEvents.push({
             "tabId": request.tabId,
             "documentUrl": request.documentUrl,
-            "events": [event]
+            "events": {
+                [event.param0]: [event]
+            }
         });
         currentTabEventsIndex = tabsEvents.length - 1; // the index is now the last element
     } else {
+        // if user navigated to another page inside the same tab, removes the former events stored for such tab
         if (tabsEvents[currentTabEventsIndex].documentUrl !== request.documentUrl) {
-            // if user navigated to another page inside the same tab, removes the former events stored for such tab
             tabsEvents[currentTabEventsIndex].documentUrl = request.documentUrl;
-            tabsEvents[currentTabEventsIndex].events = [];
+            tabsEvents[currentTabEventsIndex].events = {};
         }
-        tabsEvents[currentTabEventsIndex].events.push(event);
+
+        if (tabsEvents[currentTabEventsIndex].events.hasOwnProperty(event.param0)) {
+            // if events for the current event's pixel ID have already been registered, adds this event to that group
+            tabsEvents[currentTabEventsIndex].events[event.param0].push(event);
+        } else {
+            // if this is the first event with such pixel ID, creates a new property inside events with such event
+            tabsEvents[currentTabEventsIndex].events[event.param0] = [event];
+        }
     }
 
     browser.browserAction.setBadgeText({
-        text: tabsEvents[currentTabEventsIndex].events.length.toString(),
+        text: getEventsCount(tabsEvents[currentTabEventsIndex].events),
         tabId: request.tabId
-    })
+    });
 
     if (isPopupOpen()) {
         browser.runtime.sendMessage({type: "newEvent", events: tabsEvents}); // sends events to popup as they occur
     }
 
     function isPopupOpen() {
-        const popupView = browser.extension.getViews({ type: "popup" });
+        const popupView = browser.extension.getViews({type: "popup"});
         return popupView.length > 0;
+    }
+
+    function getEventsCount(currentTabEvents) {
+        let count = 0;
+        for (const events in currentTabEvents) {
+            if (currentTabEvents.hasOwnProperty(events)) {
+                count += currentTabEvents[events].length;
+            }
+        }
+        return count.toString();
     }
 }
 
@@ -66,16 +85,17 @@ function formatRequestIntoEvent(url) {
     if (isInitEvent(urlParsed.url)) {
         const pixelIdInUrl = urlParsed.url.match(/\d+/g)[0];
         return {
-            "param0": "init",
-            "param1": pixelIdInUrl
+            "param0": pixelIdInUrl,
+            "param1": "init"
         }
     } else if (isTrackEvent(urlParsed.url)) {
-        let param2 = getParam2IfExists(urlParsed.query);
+        let param3 = getParam3IfExists(urlParsed.query);
 
         return {
-            "param0": isMicrodataEvent(urlParsed.url) ? "microdata" : isStandardConversion(urlParsed.query.ev) ? "track" : "trackCustom",
-            "param1": urlParsed.query.ev,
-            ...(param2 && {param2: param2})
+            "param0": urlParsed.query.id,
+            "param1": isMicrodataEvent(urlParsed.url) ? "microdata" : isStandardConversion(urlParsed.query.ev) ? "track" : "trackCustom",
+            "param2": urlParsed.query.ev,
+            ...(param3 && {param3: param3})
         }
     } else {
         return null;
@@ -100,8 +120,8 @@ function formatRequestIntoEvent(url) {
         return standardConversions.includes(conversionName);
     }
 
-    function getParam2IfExists(queries) {
-        let param2 = {};
+    function getParam3IfExists(queries) {
+        let param3 = {};
 
         const eventParamRegex = /cd\[.*?]/;
         Object.keys(queries).forEach(key => {
@@ -109,15 +129,15 @@ function formatRequestIntoEvent(url) {
                 // queries' keys are formatted as "cd[xxxxxx]" (i.e., "cd[content_category]")
                 const eventParamNameRegex = /(?<=\[).+?(?=])/;
                 // puts the string inside square brackets as the object's key
-                param2[key.match(eventParamNameRegex)[0]] = queries[key];
+                param3[key.match(eventParamNameRegex)[0]] = queries[key];
             }
         });
 
-        if (isEmpty(param2)) {
+        if (isEmpty(param3)) {
             return null;
         }
 
-        return param2;
+        return param3;
     }
 
     function isEmpty(obj) {
