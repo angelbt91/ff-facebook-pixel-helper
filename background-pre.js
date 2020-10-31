@@ -1,15 +1,13 @@
 let tabsEvents = [];
 
-browser.browserAction.setBadgeBackgroundColor({
-    color: "#75b640"
-});
-
-browser.browserAction.setBadgeTextColor({
-    color: "#FFF"
-});
-
+browser.browserAction.setBadgeBackgroundColor({color: "#75b640"});
+browser.browserAction.setBadgeTextColor({color: "#FFF"});
 // listens to network calls to facebook.com/.net and sends them to registerRequest to store the relevant events
 browser.webRequest.onCompleted.addListener(registerRequests, {urls: ["*://*.facebook.com/*", "*://*.facebook.net/*"]});
+// remove events for the current tab if user navigates to another document
+browser.webNavigation.onCommitted.addListener(removeEventsOnNavigation);
+// listens to the popup message that requests the events upon opening
+browser.runtime.onMessage.addListener(sendEventsToPopup);
 
 function registerRequests(request) {
     if (request.statusCode !== 200) {
@@ -23,7 +21,7 @@ function registerRequests(request) {
     }
 
     // finds the index in tabsEvents that corresponds to the tab of the current event
-    let currentTabEventsIndex = tabsEvents.findIndex((tabEvents) => {
+    let currentTabEventsIndex = tabsEvents.findIndex(tabEvents => {
         return tabEvents.tabId === request.tabId;
     });
 
@@ -38,11 +36,7 @@ function registerRequests(request) {
         });
         currentTabEventsIndex = tabsEvents.length - 1; // the index is now the last element
     } else {
-        // if user navigated to another page inside the same tab, removes the former events stored for such tab
-        if (tabsEvents[currentTabEventsIndex].documentUrl !== request.documentUrl) {
-            tabsEvents[currentTabEventsIndex].documentUrl = request.documentUrl;
-            tabsEvents[currentTabEventsIndex].events = {};
-        }
+        tabsEvents[currentTabEventsIndex].documentUrl = request.documentUrl;
 
         if (tabsEvents[currentTabEventsIndex].events.hasOwnProperty(event.param0)) {
             // if events for the current event's pixel ID have already been registered, adds this event to that group
@@ -61,21 +55,57 @@ function registerRequests(request) {
     if (isPopupOpen()) {
         browser.runtime.sendMessage({type: "newEvent", events: tabsEvents}); // sends events to popup as they occur
     }
+}
 
-    function isPopupOpen() {
-        const popupView = browser.extension.getViews({type: "popup"});
-        return popupView.length > 0;
-    }
+function removeEventsOnNavigation(details) {
+    if (details.transitionType !== "auto_subframe" && details.transitionType !== "manual_subframe") {
+        const navigationTabEvents = tabsEvents.find((tabEvents) => {
+            return tabEvents.tabId === details.tabId;
+        });
 
-    function getEventsCount(currentTabEvents) {
-        let count = 0;
-        for (const events in currentTabEvents) {
-            if (currentTabEvents.hasOwnProperty(events)) {
-                count += currentTabEvents[events].length;
+        if (navigationTabEvents) {
+            navigationTabEvents.events = [];
+            navigationTabEvents.documentUrl = null;
+            if (isPopupOpen()) {
+                browser.runtime.sendMessage({type: "newEvent", events: tabsEvents}); // refresh events on the popup
             }
         }
-        return count.toString();
     }
+}
+
+function sendEventsToPopup(message, sender, sendResponse) {
+    switch (message.type) {
+        case "getEvents":
+            const requestedTabEvents = tabsEvents.find((tabEvents) => {
+                return tabEvents.tabId === message.tabId;
+            });
+
+            if (requestedTabEvents) {
+                sendResponse({
+                    events: requestedTabEvents.events,
+                    hostname: requestedTabEvents.documentUrl ? new URL(requestedTabEvents.documentUrl).hostname : null
+                });
+            } else {
+                sendResponse({
+                    events: null,
+                    hostname: null
+                })
+            }
+            break;
+        default:
+            console.error("Unrecognised message: ", message);
+            break;
+    }
+}
+
+function getEventsCount(currentTabEvents) {
+    let count = 0;
+    for (const events in currentTabEvents) {
+        if (currentTabEvents.hasOwnProperty(events)) {
+            count += currentTabEvents[events].length;
+        }
+    }
+    return count.toString();
 }
 
 function formatRequestIntoEvent(url) {
@@ -139,46 +169,18 @@ function formatRequestIntoEvent(url) {
 
         return param3;
     }
-
-    function isEmpty(obj) {
-        // if the for loop runs, it means object is not empty
-        // this is the fastest implementation for this check as per https://stackoverflow.com/a/59787784
-        for (let i in obj) {
-            return false;
-        }
-        return true;
-    }
 }
 
-// empty events from current tab if user reloads it
-browser.webNavigation.onCommitted.addListener(function (details) {
-    if (details.transitionType === "reload") {
-        const reloadedTabEvents = tabsEvents.find((tabEvents) => {
-            return tabEvents.tabId === details.tabId;
-        });
-
-        if (reloadedTabEvents) {
-            reloadedTabEvents.events = [];
-        }
+function isEmpty(obj) {
+    // if the for loop runs, it means object is not empty
+    // this is the fastest implementation for this check as per https://stackoverflow.com/a/59787784
+    for (let i in obj) {
+        return false;
     }
-});
+    return true;
+}
 
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    switch (message.type) {
-        case "getEvents":
-            // listens to the popup message that requests the events upon opening
-            const requestedTabEvents = tabsEvents.find((tabEvents) => {
-                return tabEvents.tabId === message.tabId;
-            });
-
-            if (requestedTabEvents) {
-                sendResponse(requestedTabEvents.events);
-            } else {
-                console.log("No events for this tab");
-            }
-            break;
-        default:
-            console.error("Unrecognised message: ", message);
-            break;
-    }
-});
+function isPopupOpen() {
+    const popupView = browser.extension.getViews({type: "popup"});
+    return popupView.length > 0;
+}

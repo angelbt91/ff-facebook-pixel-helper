@@ -3,9 +3,9 @@
 body, #root {
     font-family: "Open Sans", sans-serif;
     font-size: 12px;
-    width: 300px;
+    width: 400px;
     min-height: 200px;
     margin: 0;
-    background-color: #282c34;
+    background-color: #FFF;
     overflow-x: hidden;
 }
