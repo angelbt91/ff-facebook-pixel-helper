@@ -1,15 +1,13 @@
 let tabsEvents = [];
 
-browser.browserAction.setBadgeBackgroundColor({
-    color: "#75b640"
-});
-
-browser.browserAction.setBadgeTextColor({
-    color: "#FFF"
-});
-
+browser.browserAction.setBadgeBackgroundColor({color: "#75b640"});
+browser.browserAction.setBadgeTextColor({color: "#FFF"});
 // listens to network calls to facebook.com/.net and sends them to registerRequest to store the relevant events
 browser.webRequest.onCompleted.addListener(registerRequests, {urls: ["*://*.facebook.com/*", "*://*.facebook.net/*"]});
+// remove events for the current tab if user navigates to another document
+browser.webNavigation.onCommitted.addListener(removeEventsOnNavigation);
+// listens to the popup message that requests the events upon opening
+browser.runtime.onMessage.addListener(sendEventsToPopup);
 
 function registerRequests(request) {
     if (request.statusCode !== 200) {
@@ -23,7 +21,7 @@ function registerRequests(request) {
     }
 
     // finds the index in tabsEvents that corresponds to the tab of the current event
-    let currentTabEventsIndex = tabsEvents.findIndex((tabEvents) => {
+    let currentTabEventsIndex = tabsEvents.findIndex(tabEvents => {
         return tabEvents.tabId === request.tabId;
     });
 
@@ -32,57 +30,99 @@ function registerRequests(request) {
         tabsEvents.push({
             "tabId": request.tabId,
             "documentUrl": request.documentUrl,
-            "events": [event]
+            "events": {
+                [event.param0]: [event]
+            }
         });
         currentTabEventsIndex = tabsEvents.length - 1; // the index is now the last element
     } else {
-        if (tabsEvents[currentTabEventsIndex].documentUrl !== request.documentUrl) {
-            // if user navigated to another page inside the same tab, removes the former events stored for such tab
-            tabsEvents[currentTabEventsIndex].documentUrl = request.documentUrl;
-            tabsEvents[currentTabEventsIndex].events = [];
+        tabsEvents[currentTabEventsIndex].documentUrl = request.documentUrl;
+
+        if (tabsEvents[currentTabEventsIndex].events.hasOwnProperty(event.param0)) {
+            // if events for the current event's pixel ID have already been registered, adds this event to that group
+            tabsEvents[currentTabEventsIndex].events[event.param0].push(event);
+        } else {
+            // if this is the first event with such pixel ID, creates a new property inside events with such event
+            tabsEvents[currentTabEventsIndex].events[event.param0] = [event];
         }
-        tabsEvents[currentTabEventsIndex].events.push(event);
     }
 
     browser.browserAction.setBadgeText({
-        text: tabsEvents[currentTabEventsIndex].events.length.toString(),
+        text: getEventsCount(tabsEvents[currentTabEventsIndex].events),
         tabId: request.tabId
-    })
+    });
 
     if (isPopupOpen()) {
         browser.runtime.sendMessage({type: "newEvent", events: tabsEvents}); // sends events to popup as they occur
     }
+}
 
-    function isPopupOpen() {
-        const popupView = browser.extension.getViews({ type: "popup" });
-        return popupView.length > 0;
+function removeEventsOnNavigation(details) {
+    if (details.transitionType !== "auto_subframe" && details.transitionType !== "manual_subframe") {
+        const navigationTabEvents = tabsEvents.find((tabEvents) => {
+            return tabEvents.tabId === details.tabId;
+        });
+
+        if (navigationTabEvents) {
+            navigationTabEvents.events = [];
+            navigationTabEvents.documentUrl = null;
+            if (isPopupOpen()) {
+                browser.runtime.sendMessage({type: "newEvent", events: tabsEvents}); // refresh events on the popup
+            }
+        }
     }
+}
+
+function sendEventsToPopup(message, sender, sendResponse) {
+    switch (message.type) {
+        case "getEvents":
+            const requestedTabEvents = tabsEvents.find((tabEvents) => {
+                return tabEvents.tabId === message.tabId;
+            });
+
+            if (requestedTabEvents) {
+                sendResponse({
+                    events: requestedTabEvents.events,
+                    hostname: requestedTabEvents.documentUrl ? new URL(requestedTabEvents.documentUrl).hostname : null
+                });
+            } else {
+                sendResponse({
+                    events: null,
+                    hostname: null
+                })
+            }
+            break;
+        default:
+            console.error("Unrecognised message: ", message);
+            break;
+    }
+}
+
+function getEventsCount(currentTabEvents) {
+    let count = 0;
+    for (const events in currentTabEvents) {
+        if (currentTabEvents.hasOwnProperty(events)) {
+            count += currentTabEvents[events].length;
+        }
+    }
+    return count.toString();
 }
 
 function formatRequestIntoEvent(url) {
     const queryString = require('query-string');
     const urlParsed = queryString.parseUrl(url);
 
-    if (isInitEvent(urlParsed.url)) {
-        const pixelIdInUrl = urlParsed.url.match(/\d+/g)[0];
-        return {
-            "param0": "init",
-            "param1": pixelIdInUrl
-        }
-    } else if (isTrackEvent(urlParsed.url)) {
-        let param2 = getParam2IfExists(urlParsed.query);
+    if (isTrackEvent(urlParsed.url)) {
+        let param3 = getParam3IfExists(urlParsed.query);
 
         return {
-            "param0": isMicrodataEvent(urlParsed.url) ? "microdata" : isStandardConversion(urlParsed.query.ev) ? "track" : "trackCustom",
-            "param1": urlParsed.query.ev,
-            ...(param2 && {param2: param2})
+            "param0": urlParsed.query.id,
+            "param1": isMicrodataEvent(urlParsed.url) ? "microdata" : isStandardConversion(urlParsed.query.ev) ? "track" : "trackCustom",
+            "param2": urlParsed.query.ev,
+            ...(param3 && {param3: param3})
         }
     } else {
         return null;
-    }
-
-    function isInitEvent(url) {
-        return url.includes("https://connect.facebook.net/signals/config/");
     }
 
     function isTrackEvent(url) {
@@ -100,8 +140,8 @@ function formatRequestIntoEvent(url) {
         return standardConversions.includes(conversionName);
     }
 
-    function getParam2IfExists(queries) {
-        let param2 = {};
+    function getParam3IfExists(queries) {
+        let param3 = {};
 
         const eventParamRegex = /cd\[.*?]/;
         Object.keys(queries).forEach(key => {
@@ -109,56 +149,28 @@ function formatRequestIntoEvent(url) {
                 // queries' keys are formatted as "cd[xxxxxx]" (i.e., "cd[content_category]")
                 const eventParamNameRegex = /(?<=\[).+?(?=])/;
                 // puts the string inside square brackets as the object's key
-                param2[key.match(eventParamNameRegex)[0]] = queries[key];
+                param3[key.match(eventParamNameRegex)[0]] = queries[key];
             }
         });
 
-        if (isEmpty(param2)) {
+        if (isEmpty(param3)) {
             return null;
         }
 
-        return param2;
-    }
-
-    function isEmpty(obj) {
-        // if the for loop runs, it means object is not empty
-        // this is the fastest implementation for this check as per https://stackoverflow.com/a/59787784
-        for (let i in obj) {
-            return false;
-        }
-        return true;
+        return param3;
     }
 }
 
-// empty events from current tab if user reloads it
-browser.webNavigation.onCommitted.addListener(function (details) {
-    if (details.transitionType === "reload") {
-        const reloadedTabEvents = tabsEvents.find((tabEvents) => {
-            return tabEvents.tabId === details.tabId;
-        });
-
-        if (reloadedTabEvents) {
-            reloadedTabEvents.events = [];
-        }
+function isEmpty(obj) {
+    // if the for loop runs, it means object is not empty
+    // this is the fastest implementation for this check as per https://stackoverflow.com/a/59787784
+    for (let i in obj) {
+        return false;
     }
-});
+    return true;
+}
 
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    switch (message.type) {
-        case "getEvents":
-            // listens to the popup message that requests the events upon opening
-            const requestedTabEvents = tabsEvents.find((tabEvents) => {
-                return tabEvents.tabId === message.tabId;
-            });
-
-            if (requestedTabEvents) {
-                sendResponse(requestedTabEvents.events);
-            } else {
-                console.log("No events for this tab");
-            }
-            break;
-        default:
-            console.error("Unrecognised message: ", message);
-            break;
-    }
-});
+function isPopupOpen() {
+    const popupView = browser.extension.getViews({type: "popup"});
+    return popupView.length > 0;
+}

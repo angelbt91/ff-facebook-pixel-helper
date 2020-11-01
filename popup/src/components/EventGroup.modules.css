@@ -1,0 +1,11 @@
+.eventBody {
+    padding: 0 0 10px 15px;
+    color: #5a5764;
+    border-top: 1px solid #e0e0e0;
+}
+
+.pixelID {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 10px 0;
+}

@@ -11,6 +11,14 @@
     font-size: 12px;
 }
 
+.green {
+    color: #5fb963;
+}
+
+.blue {
+    color: #5198fc;
+}
+
 .eventTitle {
     margin: 0 0 0 4px;
 }
@@ -31,4 +39,8 @@
 .showParamsIcon {
     margin-left: 3px;
     font-size: 10px;
+}
+
+.clickable {
+    cursor: pointer;
 }
