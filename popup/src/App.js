@@ -1,8 +1,7 @@
 import React, {useState, useEffect} from 'react';
-import "./App.css";
 import Header from "./components/Header";
 import PixelCounter from "./components/PixelCounter";
-import Event from "./components/Event";
+import EventGroup from "./components/EventGroup";
 
 function App() {
     const [events, setEvents] = useState(null);
@@ -45,11 +44,9 @@ function App() {
         <div className="app">
             <Header/>
             <PixelCounter events={events} hostname={hostname}/>
-            {/*<div className="eventBody">
-                {events ? events.map(event => {
-                    return <Event event={event}/>
-                }) : "Nothing to show"}
-            </div>*/}
+            {events && Object.keys(events).map(key => {
+                return <EventGroup pixelID={key} events={events[key]}/>
+            })}
         </div>
     );
 }

@@ -1,8 +1,7 @@
 import React, {useState} from "react";
 import "./Event.modules.css";
-import {MdInfo} from "react-icons/md";
-import {AiFillRightCircle, AiFillRightSquare, AiOutlineRight, AiOutlineDown} from "react-icons/ai";
-import {RiFileInfoFill} from "react-icons/ri"
+import {AiFillCheckCircle, AiFillCheckSquare, AiOutlineRight, AiOutlineDown} from "react-icons/ai";
+import {BsFillLightningFill} from "react-icons/bs"
 
 function Event(props) {
     let event = props.event;
@@ -14,40 +13,36 @@ function Event(props) {
 
     const getEventParametersComponents = (event) => {
         let paramComponents = [];
-        for (let param in event.param2) {
+        for (let param in event.param3) {
             paramComponents.push(
                 <>
                     <p className="parameterTitle">{param}</p>
-                    <p className="parameterValue">{event.param2[param]}</p>
+                    <p className="parameterValue">{event.param3[param]}</p>
                 </>
             );
         }
         return paramComponents;
     }
 
-    switch (event.param0) {
-        case "init":
-            eventIcon = <MdInfo className="eventIcon"/>
-            eventTitle = `Pixel ${event.param1} initiated`;
-            break;
+    switch (event.param1) {
         case "track":
-            eventIcon = <AiFillRightCircle className="eventIcon"/>;
-            eventTitle = event.param1;
-            if (event.param2) {
+            eventIcon = <AiFillCheckCircle className="eventIcon green"/>;
+            eventTitle = event.param2;
+            if (event.param3) {
                 eventParameters = getEventParametersComponents(event);
             }
             break;
         case "trackCustom":
-            eventIcon = <AiFillRightSquare className="eventIcon"/>;
-            eventTitle = event.param1;
-            if (event.param2) {
+            eventIcon = <AiFillCheckSquare className="eventIcon green"/>;
+            eventTitle = event.param2;
+            if (event.param3) {
                 eventParameters = getEventParametersComponents(event);
             }
             break;
         case "microdata":
-            eventIcon = <RiFileInfoFill className="eventIcon"/>;
-            eventTitle = event.param1;
-            if (event.param2) {
+            eventIcon = <BsFillLightningFill className="eventIcon blue"/>;
+            eventTitle = "Microdata Automatically Detected";
+            if (event.param3) {
                 eventParameters = getEventParametersComponents(event);
             }
             break;
@@ -60,15 +55,16 @@ function Event(props) {
             <div className="event">
                 <div className="eventUpperBlock">
                     {eventIcon}
-                    <p className="eventTitle">{eventTitle}</p>
-                    {eventParameters && (showParamsBlock ?
-                            <span className="showParamsIcon" onClick={e => {
-                                setShowParamsBlock(!showParamsBlock)
-                            }}><AiOutlineDown/></span> :
-                            <span className="showParamsIcon" onClick={e => {
-                                setShowParamsBlock(!showParamsBlock)
-                            }}><AiOutlineRight/></span>
-                    )}
+                    {eventParameters ? (showParamsBlock ?
+                            <span onClick={e => setShowParamsBlock(!showParamsBlock)}>
+                                <span className="eventTitle clickable">{eventTitle}</span>
+                                <span className="showParamsIcon clickable"><AiOutlineDown/></span>
+                            </span> :
+                            <span onClick={e => setShowParamsBlock(!showParamsBlock)}>
+                                <span className="eventTitle clickable">{eventTitle}</span>
+                                <span className="showParamsIcon clickable"><AiOutlineRight/></span>
+                            </span>
+                    ) : <p className="eventTitle">{eventTitle}</p>}
                 </div>
                 {showParamsBlock &&
                 <div className="eventLowerBlock">

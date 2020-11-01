@@ -112,13 +112,7 @@ function formatRequestIntoEvent(url) {
     const queryString = require('query-string');
     const urlParsed = queryString.parseUrl(url);
 
-    if (isInitEvent(urlParsed.url)) {
-        const pixelIdInUrl = urlParsed.url.match(/\d+/g)[0];
-        return {
-            "param0": pixelIdInUrl,
-            "param1": "init"
-        }
-    } else if (isTrackEvent(urlParsed.url)) {
+    if (isTrackEvent(urlParsed.url)) {
         let param3 = getParam3IfExists(urlParsed.query);
 
         return {
@@ -129,10 +123,6 @@ function formatRequestIntoEvent(url) {
         }
     } else {
         return null;
-    }
-
-    function isInitEvent(url) {
-        return url.includes("https://connect.facebook.net/signals/config/");
     }
 
     function isTrackEvent(url) {
