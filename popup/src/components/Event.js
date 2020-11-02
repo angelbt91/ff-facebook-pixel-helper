@@ -14,12 +14,14 @@ function Event(props) {
     const getEventParametersComponents = (event) => {
         let paramComponents = [];
         for (let param in event.param3) {
-            paramComponents.push(
-                <>
-                    <p className="parameterTitle">{param}</p>
-                    <p className="parameterValue">{event.param3[param]}</p>
-                </>
-            );
+            if (event.param3.hasOwnProperty(param)) {
+                paramComponents.push(
+                    <>
+                        <p className="parameterTitle">{param}</p>
+                        <p className="parameterValue">{event.param3[param]}</p>
+                    </>
+                );
+            }
         }
         return paramComponents;
     }
@@ -46,6 +48,13 @@ function Event(props) {
                 eventParameters = getEventParametersComponents(event);
             }
             break;
+        case "btnclick":
+            eventIcon = <BsFillLightningFill className="eventIcon blue"/>;
+            eventTitle = "Button Click Automatically Detected";
+            if (event.param3) {
+                eventParameters = getEventParametersComponents(event);
+            }
+            break;
         default:
             break;
     }
@@ -56,11 +65,11 @@ function Event(props) {
                 <div className="eventUpperBlock">
                     {eventIcon}
                     {eventParameters ? (showParamsBlock ?
-                            <span onClick={e => setShowParamsBlock(!showParamsBlock)}>
+                            <span onClick={() => setShowParamsBlock(!showParamsBlock)}>
                                 <span className="eventTitle clickable">{eventTitle}</span>
                                 <span className="showParamsIcon clickable"><AiOutlineDown/></span>
                             </span> :
-                            <span onClick={e => setShowParamsBlock(!showParamsBlock)}>
+                            <span onClick={() => setShowParamsBlock(!showParamsBlock)}>
                                 <span className="eventTitle clickable">{eventTitle}</span>
                                 <span className="showParamsIcon clickable"><AiOutlineRight/></span>
                             </span>
