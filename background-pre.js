@@ -112,12 +112,12 @@ function formatRequestIntoEvent(url) {
     const queryString = require('query-string');
     const urlParsed = queryString.parseUrl(url);
 
-    if (isTrackEvent(urlParsed.url)) {
+    if (isTrackEvent(urlParsed)) {
         let param3 = getParam3IfExists(urlParsed.query);
 
         return {
             "param0": urlParsed.query.id,
-            "param1": isMicrodataEvent(urlParsed.url) ? "microdata" : isStandardConversion(urlParsed.query.ev) ? "track" : "trackCustom",
+            "param1": getParam1(urlParsed.query.ev),
             "param2": urlParsed.query.ev,
             ...(param3 && {param3: param3})
         }
@@ -125,19 +125,24 @@ function formatRequestIntoEvent(url) {
         return null;
     }
 
-    function isTrackEvent(url) {
-        return url === "https://www.facebook.com/tr/" && urlParsed.query.ev;
+    function isTrackEvent(urlParsed) {
+        return urlParsed.url === "https://www.facebook.com/tr/" && urlParsed.query.ev;
     }
 
-    function isMicrodataEvent(url) {
-        return url === "https://www.facebook.com/tr/" && urlParsed.query.ev && urlParsed.query.ev === "Microdata";
-    }
-
-    function isStandardConversion(conversionName) {
+    function getParam1(evQuery) {
         const standardConversions = ["AddPaymentInfo", "AddToCart", "AddToWishlist", "CompleteRegistration",
             "Contact", "CustomizeProduct", "Donate", "FindLocation", "InitiateCheckout", "Lead", "PageView",
             "Purchase", "Schedule", "Search", "StartTrial", "SubmitApplication", "Subscribe", "ViewContent"]
-        return standardConversions.includes(conversionName);
+
+        if (evQuery === "Microdata") {
+            return "microdata";
+        } else if (evQuery === "SubscribedButtonClick") {
+            return "btnclick";
+        } else if (standardConversions.includes(evQuery)) {
+            return "track";
+        } else {
+            return "trackCustom";
+        }
     }
 
     function getParam3IfExists(queries) {
@@ -164,6 +169,7 @@ function formatRequestIntoEvent(url) {
 function isEmpty(obj) {
     // if the for loop runs, it means object is not empty
     // this is the fastest implementation for this check as per https://stackoverflow.com/a/59787784
+    // noinspection LoopStatementThatDoesntLoopJS
     for (let i in obj) {
         return false;
     }
