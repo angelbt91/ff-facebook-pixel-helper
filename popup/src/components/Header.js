@@ -10,7 +10,7 @@ function Header() {
                 <img src={Icon} className="headerLogo" alt="Firefox Facebook Helper"/>
                 <p className="headerTitle">FF Facebook Pixel Helper</p>
             </div>
-            <a href="https://github.com/angelbt91/ff-pixel-helper" target="_blank" rel="noopener noreferrer" className="moreInfoIcon">
+            <a href="https://github.com/angelbt91/ff-facebook-pixel-helper" target="_blank" rel="noopener noreferrer" className="moreInfoIcon">
                 <AiOutlineQuestionCircle/>
             </a>
         </div>
