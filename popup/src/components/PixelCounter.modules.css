@@ -8,6 +8,10 @@ ul>li {
     margin-bottom: 3px;
 }
 
+a:link, a:visited, a:hover, a:active {
+    color: #5a5764;
+}
+
 .noPixelsFiredDetail {
     border-top: 1px solid #e0e0e0;
     color: lightsteelblue;
