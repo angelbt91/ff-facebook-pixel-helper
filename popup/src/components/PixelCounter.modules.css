@@ -1,4 +1,24 @@
 .pixelCounter {
     margin-left: 10px;
+    margin-right: 10px;
     color: #69727c;
+}
+
+ul>li {
+    margin-bottom: 3px;
+}
+
+.noPixelsFiredDetail {
+    border-top: 1px solid #e0e0e0;
+    color: lightsteelblue;
+}
+
+.clickable {
+    margin-left: 3px;
+    cursor: pointer;
+    color: black;
+}
+
+.showMoreInfoIcon {
+    font-size: 10px;
 }
