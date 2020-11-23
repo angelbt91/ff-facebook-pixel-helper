@@ -30,7 +30,7 @@ function PixelCounter(props) {
                 <li>Firefox's <a
                     href="https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop"
                     target="_blank" rel="noopener noreferrer">Enhanced Tracking Prevention</a> is not blocking the
-                    Facebook Pixel on this page
+                    Facebook Pixel on this page.
                 </li>
                 <li>You don't have any add-on installed that blocks the Facebook pixel. Some common add-ons that prevent
                     the Facebook pixel from firing are Facebook Container, uBlock, AdBlock and Disconnect.
