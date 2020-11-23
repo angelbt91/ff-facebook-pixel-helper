@@ -18,17 +18,20 @@ function registerRequests(request) {
         return; // stops if it's not a valid event
     }
 
-    eventsPerTab[request.tabId] = {
-        documentUrl: request.documentUrl,
-        events: {
-            ...(eventsPerTab[request.tabId] && eventsPerTab[request.tabId].events),
-            [event.pixelId]: []
-                .concat(eventsPerTab[request.tabId] && eventsPerTab[request.tabId].events[event.pixelId], event)
-                .filter(item => item !== undefined)
+    if (eventsPerTab[request.tabId]) {
+        if (eventsPerTab[request.tabId].events[event.pixelId]) {
+            eventsPerTab[request.tabId].events[event.pixelId].push(event);
+        } else {
+            eventsPerTab[request.tabId].events[event.pixelId] = [event];
         }
-    };
-
-    console.log("eventsPerTab:", eventsPerTab); // TODO remove
+    } else {
+        eventsPerTab[request.tabId] = {
+            events: {
+                [event.pixelId]: [event]
+            }
+        }
+    }
+    eventsPerTab[request.tabId].documentUrl = request.documentUrl;
 
     browser.browserAction.setBadgeText({
         text: getEventsCount(eventsPerTab[request.tabId].events),
@@ -43,7 +46,7 @@ function registerRequests(request) {
 function removeEventsOnNavigation(details) {
     if (details.transitionType !== "auto_subframe" && details.transitionType !== "manual_subframe") {
         if (eventsPerTab[details.tabId]) {
-            eventsPerTab[details.tabId].events = [];
+            eventsPerTab[details.tabId].events = {};
             eventsPerTab[details.tabId].documentUrl = null;
 
             if (isPopupOpen()) {
