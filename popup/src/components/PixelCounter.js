@@ -3,7 +3,6 @@ import "./PixelCounter.modules.css";
 import {AiOutlineDown, AiOutlineRight} from "react-icons/ai";
 
 function PixelCounter(props) {
-
     const pixelCount = getPixelCount(props.events);
     const [showMoreInfo, setShowMoreInfo] = useState(false);
 
@@ -25,14 +24,14 @@ function PixelCounter(props) {
             </span>}
         </p>
         {(showMoreInfo && pixelCount === 0) && <div className="noPixelsFiredDetail">
-            <p className="pixelCounter">If you expected some events to fire, check that:</p>
+            <p className="pixelCounter">If you expected some Facebook events to fire, check that:</p>
             <ul className="pixelCounter">
                 <li>Firefox's <a
                     href="https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop"
                     target="_blank" rel="noopener noreferrer">Enhanced Tracking Prevention</a> is not blocking the
-                    Facebook Pixel on this page.
+                    Facebook pixel on this page.
                 </li>
-                <li>You don't have any add-on installed that blocks the Facebook pixel. Some common add-ons that prevent
+                <li>You don't have any Firefox add-on installed that blocks the Facebook pixel. Some common add-ons that prevent
                     the Facebook pixel from firing are Facebook Container, uBlock, AdBlock and Disconnect.
                 </li>
                 <li>Your events are not set up via Facebook's <a

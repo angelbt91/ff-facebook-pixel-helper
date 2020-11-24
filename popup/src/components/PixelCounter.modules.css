@@ -18,11 +18,12 @@ a:link, a:visited, a:hover, a:active {
 }
 
 .clickable {
-    margin-left: 3px;
+    margin-left: 4px;
     cursor: pointer;
     color: black;
 }
 
 .showMoreInfoIcon {
     font-size: 10px;
+    margin-left: -2px;
 }
