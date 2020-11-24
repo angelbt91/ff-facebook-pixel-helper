@@ -1,13 +1,11 @@
-let tabsEvents = [];
+let eventsPerTab = {};
 
 browser.browserAction.setBadgeBackgroundColor({color: "#75b640"});
 browser.browserAction.setBadgeTextColor({color: "#FFF"});
-// listens to network calls to facebook.com/.net and sends them to registerRequest to store the relevant events
+
 browser.webRequest.onCompleted.addListener(registerRequests, {urls: ["*://*.facebook.com/*", "*://*.facebook.net/*"]});
-// remove events for the current tab if user navigates to another document
 browser.webNavigation.onCommitted.addListener(removeEventsOnNavigation);
-// listens to the popup message that requests the events upon opening
-browser.runtime.onMessage.addListener(sendEventsToPopup);
+browser.runtime.onMessage.addListener(sendEventsToPopupWhenOpens);
 
 function registerRequests(request) {
     if (request.statusCode !== 200) {
@@ -20,70 +18,51 @@ function registerRequests(request) {
         return; // stops if it's not a valid event
     }
 
-    // finds the index in tabsEvents that corresponds to the tab of the current event
-    let currentTabEventsIndex = tabsEvents.findIndex(tabEvents => {
-        return tabEvents.tabId === request.tabId;
-    });
-
-    if (currentTabEventsIndex === -1) {
-        // if there's no events already stored for the current tab, pushes a new tab to the array
-        tabsEvents.push({
-            "tabId": request.tabId,
-            "documentUrl": request.documentUrl,
-            "events": {
-                [event.param0]: [event]
-            }
-        });
-        currentTabEventsIndex = tabsEvents.length - 1; // the index is now the last element
-    } else {
-        tabsEvents[currentTabEventsIndex].documentUrl = request.documentUrl;
-
-        if (tabsEvents[currentTabEventsIndex].events.hasOwnProperty(event.param0)) {
-            // if events for the current event's pixel ID have already been registered, adds this event to that group
-            tabsEvents[currentTabEventsIndex].events[event.param0].push(event);
+    if (eventsPerTab[request.tabId]) {
+        if (eventsPerTab[request.tabId].events[event.pixelId]) {
+            eventsPerTab[request.tabId].events[event.pixelId].push(event);
         } else {
-            // if this is the first event with such pixel ID, creates a new property inside events with such event
-            tabsEvents[currentTabEventsIndex].events[event.param0] = [event];
+            eventsPerTab[request.tabId].events[event.pixelId] = [event];
+        }
+    } else {
+        eventsPerTab[request.tabId] = {
+            events: {
+                [event.pixelId]: [event]
+            }
         }
     }
+    eventsPerTab[request.tabId].documentUrl = request.documentUrl;
 
     browser.browserAction.setBadgeText({
-        text: getEventsCount(tabsEvents[currentTabEventsIndex].events),
+        text: getEventsCount(eventsPerTab[request.tabId].events),
         tabId: request.tabId
     });
 
     if (isPopupOpen()) {
-        browser.runtime.sendMessage({type: "newEvent", events: tabsEvents}); // sends events to popup as they occur
+        browser.runtime.sendMessage({type: "newEvent", events: eventsPerTab}); // sends events to popup as they occur
     }
 }
 
 function removeEventsOnNavigation(details) {
     if (details.transitionType !== "auto_subframe" && details.transitionType !== "manual_subframe") {
-        const navigationTabEvents = tabsEvents.find((tabEvents) => {
-            return tabEvents.tabId === details.tabId;
-        });
+        if (eventsPerTab[details.tabId]) {
+            eventsPerTab[details.tabId].events = {};
+            eventsPerTab[details.tabId].documentUrl = null;
 
-        if (navigationTabEvents) {
-            navigationTabEvents.events = [];
-            navigationTabEvents.documentUrl = null;
             if (isPopupOpen()) {
-                browser.runtime.sendMessage({type: "newEvent", events: tabsEvents}); // refresh events on the popup
+                browser.runtime.sendMessage({type: "newEvent", events: eventsPerTab}); // refresh events on the popup
             }
         }
     }
 }
 
-function sendEventsToPopup(message, sender, sendResponse) {
+function sendEventsToPopupWhenOpens(message, sender, sendResponse) {
     switch (message.type) {
         case "getEvents":
-            const requestedTabEvents = tabsEvents.find((tabEvents) => {
-                return tabEvents.tabId === message.tabId;
-            });
-
-            if (requestedTabEvents) {
+            if (eventsPerTab[message.tabId]) {
                 sendResponse({
-                    events: requestedTabEvents.events,
-                    hostname: requestedTabEvents.documentUrl ? new URL(requestedTabEvents.documentUrl).hostname : null
+                    events: eventsPerTab[message.tabId].events,
+                    hostname: eventsPerTab[message.tabId].documentUrl ? new URL(eventsPerTab[message.tabId].documentUrl).hostname : null
                 });
             } else {
                 sendResponse({
@@ -113,13 +92,13 @@ function formatRequestIntoEvent(url) {
     const urlParsed = queryString.parseUrl(url);
 
     if (isTrackEvent(urlParsed)) {
-        let param3 = getParam3IfExists(urlParsed.query);
+        let eventParams = getEventParamsIfAvailable(urlParsed.query);
 
         return {
-            "param0": urlParsed.query.id,
-            "param1": getParam1(urlParsed.query.ev),
-            "param2": urlParsed.query.ev,
-            ...(param3 && {param3: param3})
+            "pixelId": urlParsed.query.id,
+            "eventType": getEventType(urlParsed.query.ev),
+            "eventName": urlParsed.query.ev,
+            ...(eventParams && {"eventParams": eventParams})
         }
     } else {
         return null;
@@ -129,7 +108,7 @@ function formatRequestIntoEvent(url) {
         return urlParsed.url === "https://www.facebook.com/tr/" && urlParsed.query.ev;
     }
 
-    function getParam1(evQuery) {
+    function getEventType(evQuery) {
         const standardConversions = ["AddPaymentInfo", "AddToCart", "AddToWishlist", "CompleteRegistration",
             "Contact", "CustomizeProduct", "Donate", "FindLocation", "InitiateCheckout", "Lead", "PageView",
             "Purchase", "Schedule", "Search", "StartTrial", "SubmitApplication", "Subscribe", "ViewContent"]
@@ -145,8 +124,8 @@ function formatRequestIntoEvent(url) {
         }
     }
 
-    function getParam3IfExists(queries) {
-        let param3 = {};
+    function getEventParamsIfAvailable(queries) {
+        let eventParams = {};
 
         const eventParamRegex = /cd\[.*?]/;
         Object.keys(queries).forEach(key => {
@@ -154,15 +133,15 @@ function formatRequestIntoEvent(url) {
                 // queries' keys are formatted as "cd[xxxxxx]" (i.e., "cd[content_category]")
                 const eventParamNameRegex = /(?<=\[).+?(?=])/;
                 // puts the string inside square brackets as the object's key
-                param3[key.match(eventParamNameRegex)[0]] = queries[key];
+                eventParams[key.match(eventParamNameRegex)[0]] = queries[key];
             }
         });
 
-        if (isEmpty(param3)) {
+        if (isEmpty(eventParams)) {
             return null;
         }
 
-        return param3;
+        return eventParams;
     }
 }
 

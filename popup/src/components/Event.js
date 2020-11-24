@@ -13,12 +13,12 @@ function Event(props) {
 
     const getEventParametersComponents = (event) => {
         let paramComponents = [];
-        for (let param in event.param3) {
-            if (event.param3.hasOwnProperty(param)) {
+        for (let param in event.eventParams) {
+            if (event.eventParams.hasOwnProperty(param)) {
                 paramComponents.push(
                     <>
                         <p className="parameterTitle">{param}</p>
-                        <p className="parameterValue">{event.param3[param]}</p>
+                        <p className="parameterValue">{event.eventParams[param]}</p>
                     </>
                 );
             }
@@ -26,32 +26,32 @@ function Event(props) {
         return paramComponents;
     }
 
-    switch (event.param1) {
+    switch (event.eventType) {
         case "track":
             eventIcon = <AiFillCheckCircle className="eventIcon green"/>;
-            eventTitle = event.param2;
-            if (event.param3) {
+            eventTitle = event.eventName;
+            if (event.eventParams) {
                 eventParameters = getEventParametersComponents(event);
             }
             break;
         case "trackCustom":
             eventIcon = <AiFillCheckSquare className="eventIcon green"/>;
-            eventTitle = event.param2;
-            if (event.param3) {
+            eventTitle = event.eventName;
+            if (event.eventParams) {
                 eventParameters = getEventParametersComponents(event);
             }
             break;
         case "microdata":
             eventIcon = <BsFillLightningFill className="eventIcon blue"/>;
             eventTitle = "Microdata Automatically Detected";
-            if (event.param3) {
+            if (event.eventParams) {
                 eventParameters = getEventParametersComponents(event);
             }
             break;
         case "btnclick":
             eventIcon = <BsFillLightningFill className="eventIcon blue"/>;
             eventTitle = "Button Click Automatically Detected";
-            if (event.param3) {
+            if (event.eventParams) {
                 eventParameters = getEventParametersComponents(event);
             }
             break;

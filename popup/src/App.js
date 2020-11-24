@@ -12,9 +12,9 @@ function App() {
         // requests the events upon opening the popup
         browser.tabs.query({active: true, currentWindow: true}, tabs => {
             const sending = browser.runtime.sendMessage({type: "getEvents", tabId: tabs[0].id});
-            sending.then(events => {
-                setEvents(events.events || null);
-                setHostname(events.hostname || null);
+            sending.then(response => {
+                setEvents(response.events || null);
+                setHostname(response.hostname || null);
             }, error => {
                 console.log("Couldn't retrieve data:", error);
             });
@@ -25,9 +25,7 @@ function App() {
             browser.tabs.query({active: true, currentWindow: true}, tabs => {
                 switch (message.type) {
                     case "newEvent":
-                        const thisTabEvents = message.events.find(event => {
-                            return event.tabId === tabs[0].id
-                        })
+                        const thisTabEvents = message.events[tabs[0].id];
                         setEvents(thisTabEvents.events || null);
                         setHostname(thisTabEvents.documentUrl ? new URL(thisTabEvents.documentUrl).hostname : null);
                         break;
