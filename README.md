@@ -33,11 +33,19 @@ $ npm install -g browserify
 $ browserify background-pre.js -o ff-facebook-pixel-helper-background.js
 ```
 
-Get into the popup folder, install dependencies and generate the static files:
+Get into the popup folder, install dependencies and generate the static files for the popup:
 ``` 
 $ cd popup
 $ npm install
 $ npm run build
 ```
 
-This local copy of the extension can be tested by loading it on Firefox as a [temporary addon](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/).
+Create a `build` folder at the root of the project and copy there only the files needed for the plugin to work:
+```
+$ cd ..
+$ mkdir build build/popup
+$ cp -R icons ff-facebook-pixel-helper-background.js manifest.json ./build
+$ cp -R popup/build ./build/popup
+```
+
+This local copy of the extension generated on the `/build` folder can be tested by loading it on Firefox as a [temporary addon](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/).
