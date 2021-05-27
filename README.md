@@ -43,9 +43,9 @@ $ npm run build
 Create a `build` folder at the root of the project and copy there only the files needed for the plugin to work:
 ```
 $ cd ..
-$ mkdir build build/popup
-$ cp -R icons ff-facebook-pixel-helper-background.js manifest.json ./build
-$ cp -R popup/build ./build/popup
+$ mkdir dist dist/popup
+$ cp -R icons ff-facebook-pixel-helper-background.js manifest.json ./dist
+$ cp -R popup/build ./dist/popup
 ```
 
-This local copy of the extension generated on the `/build` folder can be tested by loading it on Firefox as a [temporary addon](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/).
+This local copy of the extension generated on the `/dist` folder can be tested by loading it on Firefox as a [temporary addon](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/).

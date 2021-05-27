@@ -2,7 +2,7 @@
 
   "manifest_version": 2,
   "name": "FF Facebook Pixel Helper",
-  "version": "1.0.5",
+  "version": "1.0.6",
 
   "description": "Unofficial Facebook Pixel Helper extension for Firefox. View all Facebook events fired on the current page.",
 
